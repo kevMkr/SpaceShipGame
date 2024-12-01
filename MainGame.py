@@ -25,9 +25,6 @@ clock = pygame.time.Clock()
 # Player settings
 PLAYER_WIDTH = 50
 PLAYER_HEIGHT = 30
-player_x = SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2
-player_y = SCREEN_HEIGHT - 60
-player_speed = 5
 
 # Enemy settings
 ENEMY_WIDTH = 40
@@ -50,42 +47,73 @@ ENEMY_BULLET_WIDTH = 5
 ENEMY_BULLET_HEIGHT = 15
 enemy_bullets = []
 enemy_bullet_speed = 5
-enemy_shoot_timer = 2  # Timer for controlling enemy firing rate
+enemy_shoot_timer = 0  # Timer for controlling enemy firing rate
 
 # Score
 score = 0
 font = pygame.font.SysFont("Arial", 24)
 
-def pause():
-    paused = True
-    while paused:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_c:
-                    paused = False
-                elif event.key == pygame.K_q:
-                    pygame.quit()
 
-def draw_player(x, y):
-    pygame.draw.rect(screen, GREEN, (x, y, PLAYER_WIDTH, PLAYER_HEIGHT))
+class CyberSafe:
+    #Player class to manage position, movement, and health.
+    def __init__(self, x, y, health=10):
+        self.x = x
+        self.y = y
+        self.health = health
+        self.speed = 5
+
+    #Handles player movement based on key presses.
+    def move(self, keys):
+        if keys[pygame.K_LEFT] and self.x > 0:
+            self.x -= self.speed
+        if keys[pygame.K_RIGHT] and self.x < SCREEN_WIDTH - PLAYER_WIDTH:
+            self.x += self.speed
+        if keys[pygame.K_UP] and self.y > 0:
+            self.y -= self.speed
+        if keys[pygame.K_DOWN] and self.y < SCREEN_HEIGHT - PLAYER_HEIGHT:
+            self.y += self.speed
+
+        # Collision Player
+        if self.y < 350:
+            self.y = 350
+
+    def draw(self):
+        """Draws the player on the screen."""
+        pygame.draw.rect(screen, GREEN, (self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT))
+
+    def take_damage(self):
+        """Reduces player health when hit."""
+        self.health -= 1
+        if self.health <= 0:
+            print("Game Over!")
+            pygame.quit()
+            sys.exit()
+
 
 def draw_enemy(x, y):
     pygame.draw.rect(screen, RED, (x, y, ENEMY_WIDTH, ENEMY_HEIGHT))
 
+
 def draw_bullet(x, y):
     pygame.draw.rect(screen, WHITE, (x, y, BULLET_WIDTH, BULLET_HEIGHT))
+
 
 def draw_enemy_bullet(x, y):
     pygame.draw.rect(screen, RED, (x, y, ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT))
 
-def show_score():
+
+def show_score_and_health(score, health):
     score_text = font.render(f"Score: {score}", True, WHITE)
+    health_text = font.render(f"Health: {health}", True, WHITE)
     screen.blit(score_text, (10, 10))
+    screen.blit(health_text, (10, 40))
+
 
 def main():
-    global player_x, player_y, bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer
+    global bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer
+
+    # Create player object
+    player = CyberSafe(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT - 60)
 
     running = True
     while running:
@@ -97,24 +125,12 @@ def main():
 
         # Player movement
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] and player_x > 0:
-            player_x -= player_speed
-        if keys[pygame.K_RIGHT] and player_x < SCREEN_WIDTH - PLAYER_WIDTH:
-            player_x += player_speed
-        if keys[pygame.K_UP] and player_y > 0:
-            player_y -= player_speed
-        if keys[pygame.K_DOWN] and player_y < SCREEN_HEIGHT - PLAYER_HEIGHT:
-            player_y += player_speed
-        if keys[pygame.K_ESCAPE]:
-            pause()
-
-        if player_y <= 350:
-            player_y = 350
+        player.move(keys)
 
         # Automatic shooting
         bullet_timer += 1
         if bullet_timer >= 20:  # Adjust this value to change the firing rate
-            bullets.append([player_x + PLAYER_WIDTH // 2, player_y])
+            bullets.append([player.x + PLAYER_WIDTH // 2, player.y])
             bullet_timer = 0
 
         # Update bullets
@@ -137,10 +153,11 @@ def main():
         # Check for collisions with the player
         for enemy_bullet in enemy_bullets:
             if (
-                player_x < enemy_bullet[0] < player_x + PLAYER_WIDTH
-                and player_y < enemy_bullet[1] < player_y + PLAYER_HEIGHT
+                player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH
+                and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT
             ):
-                print("Player hit!")  # Replace with game-over logic or health reduction
+                enemy_bullets.remove(enemy_bullet)
+                player.take_damage()
 
         # Update enemies
         for enemy in enemies:
@@ -166,16 +183,17 @@ def main():
                     break
 
         # Draw player
-        draw_player(player_x, player_y)
+        player.draw()
 
-        # Draw score
-        show_score()
+        # Draw score and health
+        show_score_and_health(score, player.health)
 
         # Update display
         pygame.display.flip()
 
         # Cap the frame rate
         clock.tick(60)
+
 
 if __name__ == "__main__":
     main()
