@@ -45,9 +45,28 @@ bullets = []
 bullet_speed = -7
 bullet_timer = 0  # Timer to control automatic bullet firing
 
+# Enemy bullet settings
+ENEMY_BULLET_WIDTH = 5
+ENEMY_BULLET_HEIGHT = 15
+enemy_bullets = []
+enemy_bullet_speed = 5
+enemy_shoot_timer = 2  # Timer for controlling enemy firing rate
+
 # Score
 score = 0
 font = pygame.font.SysFont("Arial", 24)
+
+def pause():
+    paused = True
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    paused = False
+                elif event.key == pygame.K_q:
+                    pygame.quit()
 
 def draw_player(x, y):
     pygame.draw.rect(screen, GREEN, (x, y, PLAYER_WIDTH, PLAYER_HEIGHT))
@@ -58,12 +77,15 @@ def draw_enemy(x, y):
 def draw_bullet(x, y):
     pygame.draw.rect(screen, WHITE, (x, y, BULLET_WIDTH, BULLET_HEIGHT))
 
+def draw_enemy_bullet(x, y):
+    pygame.draw.rect(screen, RED, (x, y, ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT))
+
 def show_score():
     score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(score_text, (10, 10))
 
 def main():
-    global player_x, bullets, enemies, score, bullet_timer
+    global player_x, player_y, bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer
 
     running = True
     while running:
@@ -79,6 +101,15 @@ def main():
             player_x -= player_speed
         if keys[pygame.K_RIGHT] and player_x < SCREEN_WIDTH - PLAYER_WIDTH:
             player_x += player_speed
+        if keys[pygame.K_UP] and player_y > 0:
+            player_y -= player_speed
+        if keys[pygame.K_DOWN] and player_y < SCREEN_HEIGHT - PLAYER_HEIGHT:
+            player_y += player_speed
+        if keys[pygame.K_ESCAPE]:
+            pause()
+
+        if player_y <= 350:
+            player_y = 350
 
         # Automatic shooting
         bullet_timer += 1
@@ -90,6 +121,26 @@ def main():
         bullets = [[x, y + bullet_speed] for x, y in bullets if y + bullet_speed > 0]
         for bullet in bullets:
             draw_bullet(bullet[0], bullet[1])
+
+        # Enemy shooting
+        enemy_shoot_timer += 1
+        if enemy_shoot_timer >= 50:  # Adjust to change enemy firing frequency
+            for enemy in enemies:
+                enemy_bullets.append([enemy[0] + ENEMY_WIDTH // 2, enemy[1] + ENEMY_HEIGHT])
+            enemy_shoot_timer = 0
+
+        # Update enemy bullets
+        enemy_bullets = [[x, y + enemy_bullet_speed] for x, y in enemy_bullets if y < SCREEN_HEIGHT]
+        for enemy_bullet in enemy_bullets:
+            draw_enemy_bullet(enemy_bullet[0], enemy_bullet[1])
+
+        # Check for collisions with the player
+        for enemy_bullet in enemy_bullets:
+            if (
+                player_x < enemy_bullet[0] < player_x + PLAYER_WIDTH
+                and player_y < enemy_bullet[1] < player_y + PLAYER_HEIGHT
+            ):
+                print("Player hit!")  # Replace with game-over logic or health reduction
 
         # Update enemies
         for enemy in enemies:
