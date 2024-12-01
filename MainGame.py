@@ -31,14 +31,12 @@ ENEMY_WIDTH = 40
 ENEMY_HEIGHT = 30
 enemy_speed = 2
 enemies = [
-    {
-        "x": random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH),  # Spawn in a random horizontal position
-        "y": random.randint(-100, -ENEMY_HEIGHT),  # Spawn above the screen
-        "dx": random.choice([-2, -1, 1, 2]),  # Random horizontal movement speed
-        "dy": random.choice([1, 2])  # Moving downwards at random speed
-    }
+    [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
     for _ in range(6)
 ]
+
+# Initialize random movement deltas for enemies
+enemy_deltas = [[random.choice([-1, 1]), random.choice([1])] for _ in range(len(enemies))]
 
 # Bullet settings
 BULLET_WIDTH = 5
@@ -60,15 +58,13 @@ font = pygame.font.SysFont("Arial", 24)
 
 
 class CyberSafe:
-    """Player class to manage position, movement, and health."""
-    def __init__(self, x, y, health=100):
+    def __init__(self, x, y, health=10):
         self.x = x
         self.y = y
         self.health = health
         self.speed = 5
 
     def move(self, keys):
-        """Handles player movement based on key presses."""
         if keys[pygame.K_LEFT] and self.x > 0:
             self.x -= self.speed
         if keys[pygame.K_RIGHT] and self.x < SCREEN_WIDTH - PLAYER_WIDTH:
@@ -77,17 +73,13 @@ class CyberSafe:
             self.y -= self.speed
         if keys[pygame.K_DOWN] and self.y < SCREEN_HEIGHT - PLAYER_HEIGHT:
             self.y += self.speed
-
-        # Collision Player
         if self.y < 350:
             self.y = 350
 
     def draw(self):
-        """Draws the player on the screen."""
         pygame.draw.rect(screen, GREEN, (self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT))
 
     def take_damage(self):
-        """Reduces player health when hit."""
         self.health -= 1
         if self.health <= 0:
             print("Game Over!")
@@ -134,7 +126,7 @@ def main():
 
         # Automatic shooting
         bullet_timer += 1
-        if bullet_timer >= 20:  # Adjust this value to change the firing rate
+        if bullet_timer >= 20:
             bullets.append([player.x + PLAYER_WIDTH // 2, player.y])
             bullet_timer = 0
 
@@ -145,9 +137,9 @@ def main():
 
         # Enemy shooting
         enemy_shoot_timer += 1
-        if enemy_shoot_timer >= 50:  # Adjust to change enemy firing frequency
+        if enemy_shoot_timer >= 50:
             for enemy in enemies:
-                enemy_bullets.append([enemy["x"] + ENEMY_WIDTH // 2, enemy["y"] + ENEMY_HEIGHT])
+                enemy_bullets.append([enemy[0] + ENEMY_WIDTH // 2, enemy[1] + ENEMY_HEIGHT])
             enemy_shoot_timer = 0
 
         # Update enemy bullets
@@ -165,39 +157,43 @@ def main():
                 player.take_damage()
 
         # Update enemies
-        for enemy in enemies:
-            # Move enemies downward
-            enemy["y"] += enemy["dy"]
+        for i, enemy in enumerate(enemies):
+            # Respawn logic if enemy moves off-screen from above
+            if enemy[1] < 0:
+                enemy[1] += 2  # Spawn from above (falling)
 
-            # After moving downward, make enemies move horizontally (randomly) within bounds
-            enemy["x"] += enemy["dx"]
+            # Movement after spawning
+            if enemy[1] >= 0:
+                enemy[0] += enemy_deltas[i][0] * enemy_speed
+                enemy[1] += enemy_deltas[i][1] * enemy_speed
 
-            # Reverse direction if hitting screen edges
-            if enemy["x"] <= 0 or enemy["x"] >= SCREEN_WIDTH - ENEMY_WIDTH:
-                enemy["dx"] *= -1
-            if enemy["y"] >= SCREEN_HEIGHT:  # If they go below the screen, respawn above
-                enemy["y"] = random.randint(-ENEMY_HEIGHT, -100)
-                enemy["x"] = random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH)
+                # Restrict movement to the y=0 to y=200 area
+                if enemy[1] >= 200:
+                    enemy[1] = 200
+                    enemy_deltas[i][1] *= -1
+                elif enemy[1] <= 0:
+                    enemy[1] = 0
+                    enemy_deltas[i][1] *= -1
 
-            draw_enemy(enemy["x"], enemy["y"])
+                # Bounce off the horizontal boundaries
+                if enemy[0] <= 0 or enemy[0] >= SCREEN_WIDTH - ENEMY_WIDTH:
+                    enemy_deltas[i][0] *= -1
 
-        # Check collisions with bullets
+            draw_enemy(enemy[0], enemy[1])
+
+        # Check collisions
         for bullet in bullets:
             for enemy in enemies:
                 if (
-                    enemy["x"] < bullet[0] < enemy["x"] + ENEMY_WIDTH
-                    and enemy["y"] < bullet[1] < enemy["y"] + ENEMY_HEIGHT
+                    enemy[0] < bullet[0] < enemy[0] + ENEMY_WIDTH
+                    and enemy[1] < bullet[1] < enemy[1] + ENEMY_HEIGHT
                 ):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
                     enemies.append(
-                        {
-                            "x": random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH),
-                            "y": random.randint(-100, -ENEMY_HEIGHT),  # Respawn above the screen
-                            "dx": random.choice([-2, -1, 1, 2]),
-                            "dy": random.choice([1, 2])
-                        }
+                        [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
                     )
+                    enemy_deltas.append([random.choice([-1, 1]), random.choice([1])])
                     score += 1
                     break
 
