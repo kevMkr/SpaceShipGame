@@ -106,6 +106,33 @@ def show_score_and_health(score, health):
     screen.blit(health_text, (10, 40))
 
 
+def pause_menu():
+    """Displays a pause menu and waits for user input."""
+    paused = True
+    while paused:
+        screen.fill(BLACK)
+        pause_text = font.render("Paused", True, WHITE)
+        resume_text = font.render("Press R to Resume", True, WHITE)
+        quit_text = font.render("Press Q to Quit", True, WHITE)
+
+        screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, 200))
+        screen.blit(resume_text, (SCREEN_WIDTH // 2 - resume_text.get_width() // 2, 300))
+        screen.blit(quit_text, (SCREEN_WIDTH // 2 - quit_text.get_width() // 2, 350))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Resume
+                    paused = False
+                elif event.key == pygame.K_q:  # Quit
+                    pygame.quit()
+                    sys.exit()
+
+
 def main():
     global bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer
 
@@ -120,8 +147,12 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        # Player movement
+        # Handle pause menu
         keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            pause_menu()
+
+        # Player movement
         player.move(keys)
 
         # Automatic shooting
@@ -158,16 +189,13 @@ def main():
 
         # Update enemies
         for i, enemy in enumerate(enemies):
-            # Respawn logic if enemy moves off-screen from above
             if enemy[1] < 0:
-                enemy[1] += 2  # Spawn from above (falling)
-
-            # Movement after spawning
-            if enemy[1] >= 0:
+                enemy[1] += 2
+            else:
                 enemy[0] += enemy_deltas[i][0] * enemy_speed
                 enemy[1] += enemy_deltas[i][1] * enemy_speed
 
-                # Restrict movement to the y=0 to y=200 area
+                # Bounce off vertical bounds (y=0 to y=200)
                 if enemy[1] >= 200:
                     enemy[1] = 200
                     enemy_deltas[i][1] *= -1
@@ -175,7 +203,7 @@ def main():
                     enemy[1] = 0
                     enemy_deltas[i][1] *= -1
 
-                # Bounce off the horizontal boundaries
+                # Bounce off horizontal bounds
                 if enemy[0] <= 0 or enemy[0] >= SCREEN_WIDTH - ENEMY_WIDTH:
                     enemy_deltas[i][0] *= -1
 
