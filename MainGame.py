@@ -79,8 +79,15 @@ class Enemy:
         self.shoot_timer = 0
         self.delta_x = random.choice([-1, 1])  # Horizontal movement direction
         self.delta_y = 1  # Start moving downward
-        self.bullet_size = (5, 15) if enemy_type == "normal" else (10, 20)
-        self.shoot_rate = 50 if enemy_type != "rapid" else 20
+
+        # Set bullet size and shoot rate based on enemy type
+        if self.type == "heavy":
+            self.bullet_size = (10, 30)  # Larger bullet
+            self.shoot_rate = 70  # Shoots less frequently
+        else:
+            self.bullet_size = (5, 15)  # Normal bullet
+            self.shoot_rate = 50 if self.type == "normal" else 20
+
         self.change_direction_timer = random.randint(30, 100)  # Time to change direction
         self.timer_counter = 0
 
@@ -116,7 +123,16 @@ class Enemy:
         return None
 
     def draw(self):
-        color = RED if self.type == "normal" else (BLUE if self.type == "rapid" else WHITE)
+        # Assign color based on type
+        if self.type == "normal":
+            color = RED
+        elif self.type == "rapid":
+            color = BLUE
+        elif self.type == "heavy":
+            color = WHITE  
+        else:
+            color = RED  
+
         pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
 
 def draw_bullet(x, y, size):
@@ -204,9 +220,25 @@ def main():
                 ):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
+
+                    # Add different scores based on enemy type
+                    if enemy.type == "normal":
+                        score += 100
+                    elif enemy.type == "rapid":
+                        score += 150
+                    elif enemy.type == "heavy":
+                        score += 200
+
+                    # Add coins based on enemy type
+                    if enemy.type == "normal":
+                        coins += 10
+                    elif enemy.type == "rapid":
+                        coins += 15
+                    elif enemy.type == "heavy":
+                        coins += 20
+
+                    # Respawn a new enemy
                     enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-100, -40), random.choice(["normal", "heavy", "rapid"])))
-                    score += 100
-                    coins += 10
                     break
 
         # Draw player
@@ -224,4 +256,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
