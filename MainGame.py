@@ -32,7 +32,7 @@ ENEMY_HEIGHT = 30
 enemy_speed = 2
 enemies = [
     [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
-    for _ in range(6)
+    for _ in range(2)
 ]
 
 # Initialize random movement deltas for enemies
@@ -56,6 +56,9 @@ enemy_shoot_timer = 0  # Timer for controlling enemy firing rate
 score = 0
 font = pygame.font.SysFont("Arial", 24)
 
+#coins
+coins = 0
+font = pygame.font.SysFont("Arial", 24)
 
 class CyberSafe:
     def __init__(self, x, y, health=10):
@@ -99,15 +102,17 @@ def draw_enemy_bullet(x, y):
     pygame.draw.rect(screen, RED, (x, y, ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT))
 
 
-def show_score_and_health(score, health):
+def show_score_and_health(score, health, coins):
     score_text = font.render(f"Score: {score}", True, WHITE)
     health_text = font.render(f"Health: {health}", True, WHITE)
+    coins_text = font.render(f"Coins: {coins}", True, WHITE)
     screen.blit(score_text, (10, 10))
     screen.blit(health_text, (10, 40))
+    screen.blit(coins_text, (10, 70))
 
 
 def pause_menu():
-    """Displays a pause menu and waits for user input."""
+    #Displays a pause menu and waits for user input.
     paused = True
     while paused:
         screen.fill(BLACK)
@@ -134,7 +139,7 @@ def pause_menu():
 
 
 def main():
-    global bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer
+    global bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer,coins
 
     # Create player object
     player = CyberSafe(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT - 60)
@@ -222,14 +227,15 @@ def main():
                         [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
                     )
                     enemy_deltas.append([random.choice([-1, 1]), random.choice([1])])
-                    score += 1
+                    score += 100
+                    coins += 10
                     break
 
         # Draw player
         player.draw()
 
         # Draw score and health
-        show_score_and_health(score, player.health)
+        show_score_and_health(score, player.health, coins)
 
         # Update display
         pygame.display.flip()
