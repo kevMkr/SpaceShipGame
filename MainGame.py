@@ -18,7 +18,7 @@ BLUE = (0, 0, 255)
 
 # Setup the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Space Invaders")
+pygame.display.set_caption("CyberSafe")
 
 # Clock for controlling frame rate
 clock = pygame.time.Clock()
