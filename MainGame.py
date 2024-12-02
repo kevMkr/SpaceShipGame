@@ -14,6 +14,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 # Setup the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -26,18 +27,6 @@ clock = pygame.time.Clock()
 PLAYER_WIDTH = 50
 PLAYER_HEIGHT = 30
 
-# Enemy settings
-ENEMY_WIDTH = 40
-ENEMY_HEIGHT = 30
-enemy_speed = 2
-enemies = [
-    [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
-    for _ in range(2)
-]
-
-# Initialize random movement deltas for enemies
-enemy_deltas = [[random.choice([-1, 1]), random.choice([1])] for _ in range(len(enemies))]
-
 # Bullet settings
 BULLET_WIDTH = 5
 BULLET_HEIGHT = 15
@@ -45,18 +34,8 @@ bullets = []
 bullet_speed = -7
 bullet_timer = 0  # Timer to control automatic bullet firing
 
-# Enemy bullet settings
-ENEMY_BULLET_WIDTH = 5
-ENEMY_BULLET_HEIGHT = 15
-enemy_bullets = []
-enemy_bullet_speed = 5
-enemy_shoot_timer = 0  # Timer for controlling enemy firing rate
-
 # Score
 score = 0
-font = pygame.font.SysFont("Arial", 24)
-
-#coins
 coins = 0
 font = pygame.font.SysFont("Arial", 24)
 
@@ -89,18 +68,59 @@ class CyberSafe:
             pygame.quit()
             sys.exit()
 
+class Enemy:
+    def __init__(self, x, y, enemy_type="normal"):
+        self.x = x
+        self.y = y
+        self.type = enemy_type
+        self.width = 40
+        self.height = 30
+        self.speed = 2
+        self.shoot_timer = 0
+        self.delta_x = random.choice([-1, 1])  # Horizontal movement direction
+        self.delta_y = 1  # Start moving downward
+        self.bullet_size = (5, 15) if enemy_type == "normal" else (10, 20)
+        self.shoot_rate = 50 if enemy_type != "rapid" else 20
+        self.change_direction_timer = random.randint(30, 100)  # Time to change direction
+        self.timer_counter = 0
 
-def draw_enemy(x, y):
-    pygame.draw.rect(screen, RED, (x, y, ENEMY_WIDTH, ENEMY_HEIGHT))
+    def move(self):
+        self.timer_counter += 1
 
+        # Randomly change direction at intervals
+        if self.timer_counter >= self.change_direction_timer:
+            self.delta_x = random.choice([-1, 1])
+            self.delta_y = random.choice([-1, 1])  # Allow random vertical direction changes
+            self.change_direction_timer = random.randint(30, 100)  # Reset direction change timer
+            self.timer_counter = 0
 
-def draw_bullet(x, y):
-    pygame.draw.rect(screen, WHITE, (x, y, BULLET_WIDTH, BULLET_HEIGHT))
+        # Update position
+        self.x += self.delta_x * self.speed
+        self.y += self.delta_y * self.speed
 
+        # Bounce at screen edges
+        if self.x <= 0 or self.x >= SCREEN_WIDTH - self.width:
+            self.delta_x *= -1  # Reverse horizontal direction
 
-def draw_enemy_bullet(x, y):
-    pygame.draw.rect(screen, RED, (x, y, ENEMY_BULLET_WIDTH, ENEMY_BULLET_HEIGHT))
+        # Allow free downward movement until fully visible
+        if self.y >= 250:
+            self.delta_y = -1  # Reverse direction when hitting the bottom bound
+        elif self.y <= 0:
+            self.delta_y = random.choice([1])  # Ensure upward movement changes back downward
 
+    def shoot(self):
+        self.shoot_timer += 1
+        if self.shoot_timer >= self.shoot_rate:
+            self.shoot_timer = 0
+            return [self.x + self.width // 2, self.y + self.height]
+        return None
+
+    def draw(self):
+        color = RED if self.type == "normal" else (BLUE if self.type == "rapid" else WHITE)
+        pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
+
+def draw_bullet(x, y, size):
+    pygame.draw.rect(screen, WHITE, (x, y, size[0], size[1]))
 
 def show_score_and_health(score, health, coins):
     score_text = font.render(f"Score: {score}", True, WHITE)
@@ -110,39 +130,20 @@ def show_score_and_health(score, health, coins):
     screen.blit(health_text, (10, 40))
     screen.blit(coins_text, (10, 70))
 
-
-def pause_menu():
-    #Displays a pause menu and waits for user input.
-    paused = True
-    while paused:
-        screen.fill(BLACK)
-        pause_text = font.render("Paused", True, WHITE)
-        resume_text = font.render("Press R to Resume", True, WHITE)
-        quit_text = font.render("Press Q to Quit", True, WHITE)
-
-        screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, 200))
-        screen.blit(resume_text, (SCREEN_WIDTH // 2 - resume_text.get_width() // 2, 300))
-        screen.blit(quit_text, (SCREEN_WIDTH // 2 - quit_text.get_width() // 2, 350))
-
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:  # Resume
-                    paused = False
-                elif event.key == pygame.K_q:  # Quit
-                    pygame.quit()
-                    sys.exit()
-
-
 def main():
-    global bullets, enemy_bullets, enemies, score, bullet_timer, enemy_shoot_timer,coins
+    global bullets, score, coins, bullet_timer
 
     # Create player object
     player = CyberSafe(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT - 60)
+
+    # Initialize enemies
+    enemies = []
+    enemy_bullets = []
+
+    # Spawn 5 enemies with random types, starting above the screen
+    for _ in range(5):
+        enemy_type = random.choice(["normal", "heavy", "rapid"])
+        enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-200, -40), enemy_type))
 
     running = True
     while running:
@@ -152,10 +153,10 @@ def main():
                 pygame.quit()
                 sys.exit()
 
-        # Handle pause menu
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
-            pause_menu()
+            # Pause functionality here
+            pass
 
         # Player movement
         player.move(keys)
@@ -169,22 +170,24 @@ def main():
         # Update bullets
         bullets = [[x, y + bullet_speed] for x, y in bullets if y + bullet_speed > 0]
         for bullet in bullets:
-            draw_bullet(bullet[0], bullet[1])
+            draw_bullet(bullet[0], bullet[1], (BULLET_WIDTH, BULLET_HEIGHT))
 
-        # Enemy shooting
-        enemy_shoot_timer += 1
-        if enemy_shoot_timer >= 50:
-            for enemy in enemies:
-                enemy_bullets.append([enemy[0] + ENEMY_WIDTH // 2, enemy[1] + ENEMY_HEIGHT])
-            enemy_shoot_timer = 0
+        # Update enemies and their bullets
+        for enemy in enemies:
+            enemy.move()
+            enemy.draw()
+
+            # Enemy shooting
+            new_bullet = enemy.shoot()
+            if new_bullet:
+                enemy_bullets.append([new_bullet[0], new_bullet[1], enemy.bullet_size])
 
         # Update enemy bullets
-        enemy_bullets = [[x, y + enemy_bullet_speed] for x, y in enemy_bullets if y < SCREEN_HEIGHT]
+        enemy_bullets = [[x, y + 5, size] for x, y, size in enemy_bullets if y < SCREEN_HEIGHT]
         for enemy_bullet in enemy_bullets:
-            draw_enemy_bullet(enemy_bullet[0], enemy_bullet[1])
+            draw_bullet(enemy_bullet[0], enemy_bullet[1], enemy_bullet[2])
 
-        # Check for collisions with the player
-        for enemy_bullet in enemy_bullets:
+            # Check collision with player
             if (
                 player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH
                 and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT
@@ -192,41 +195,16 @@ def main():
                 enemy_bullets.remove(enemy_bullet)
                 player.take_damage()
 
-        # Update enemies
-        for i, enemy in enumerate(enemies):
-            if enemy[1] < 0:
-                enemy[1] += 2
-            else:
-                enemy[0] += enemy_deltas[i][0] * enemy_speed
-                enemy[1] += enemy_deltas[i][1] * enemy_speed
-
-                # Bounce off vertical bounds (y=0 to y=200)
-                if enemy[1] >= 200:
-                    enemy[1] = 200
-                    enemy_deltas[i][1] *= -1
-                elif enemy[1] <= 0:
-                    enemy[1] = 0
-                    enemy_deltas[i][1] *= -1
-
-                # Bounce off horizontal bounds
-                if enemy[0] <= 0 or enemy[0] >= SCREEN_WIDTH - ENEMY_WIDTH:
-                    enemy_deltas[i][0] *= -1
-
-            draw_enemy(enemy[0], enemy[1])
-
-        # Check collisions
-        for bullet in bullets:
-            for enemy in enemies:
+        # Check collisions between player bullets and enemies
+        for bullet in bullets[:]:
+            for enemy in enemies[:]:
                 if (
-                    enemy[0] < bullet[0] < enemy[0] + ENEMY_WIDTH
-                    and enemy[1] < bullet[1] < enemy[1] + ENEMY_HEIGHT
+                    enemy.x < bullet[0] < enemy.x + enemy.width
+                    and enemy.y < bullet[1] < enemy.y + enemy.height
                 ):
                     bullets.remove(bullet)
                     enemies.remove(enemy)
-                    enemies.append(
-                        [random.randint(0, SCREEN_WIDTH - ENEMY_WIDTH), random.randint(-100, -40)]
-                    )
-                    enemy_deltas.append([random.choice([-1, 1]), random.choice([1])])
+                    enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-100, -40), random.choice(["normal", "heavy", "rapid"])))
                     score += 100
                     coins += 10
                     break
@@ -234,7 +212,7 @@ def main():
         # Draw player
         player.draw()
 
-        # Draw score and health
+        # Show score and health
         show_score_and_health(score, player.health, coins)
 
         # Update display
@@ -246,3 +224,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
