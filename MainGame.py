@@ -40,7 +40,7 @@ coins = 0
 font = pygame.font.SysFont("Arial", 24)
 
 class CyberSafe:
-    def __init__(self, x, y, health=10, damage=1):
+    def __init__(self, x, y, health=100, damage=10):
         self.x = x
         self.y = y
         self.health = health
