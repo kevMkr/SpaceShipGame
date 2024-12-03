@@ -40,10 +40,12 @@ coins = 0
 font = pygame.font.SysFont("Arial", 24)
 
 class CyberSafe:
-    def __init__(self, x, y, health=10):
+    def __init__(self, x, y, health=10, damage=1):
         self.x = x
         self.y = y
         self.health = health
+        self.max_health = health
+        self.damage = damage
         self.speed = 5
 
     def move(self, keys):
@@ -60,6 +62,9 @@ class CyberSafe:
 
     def draw(self):
         pygame.draw.rect(screen, GREEN, (self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT))
+        # Display health bar
+        pygame.draw.rect(screen, RED, (self.x, self.y - 10, PLAYER_WIDTH, 5))
+        pygame.draw.rect(screen, GREEN, (self.x, self.y - 10, PLAYER_WIDTH * (self.health / self.max_health), 5))
 
     def take_damage(self):
         self.health -= 1
@@ -67,6 +72,22 @@ class CyberSafe:
             print("Game Over!")
             pygame.quit()
             sys.exit()
+
+    def upgrade_health(self):
+        self.max_health += 5
+        self.health = self.max_health  # Restore full health when upgraded
+
+    def upgrade_damage(self):
+        self.damage += 1
+
+
+def show_upgrade_menu(player, coins):
+    #Displays the upgrade menu and allows upgrades
+    upgrade_text = font.render("Upgrade Menu: Press 1 to Increase Health (50 Coins), 2 to Increase Damage (30 Coins)", True, WHITE)
+    coins_text = font.render(f"Coins: {coins}", True, WHITE)
+
+    screen.blit(upgrade_text, (10, SCREEN_HEIGHT - 80))
+    screen.blit(coins_text, (10, SCREEN_HEIGHT - 50))
 
 class Enemy:
     def __init__(self, x, y, enemy_type="normal", wave=1):
@@ -141,6 +162,53 @@ class Enemy:
             return True  # Return True if the enemy is dead
         return False  # Return False if the enemy is still alive
 
+class Boss:
+    def __init__(self, x, y, wave):
+        self.x = x
+        self.y = y
+        self.width = 100
+        self.height = 80
+        self.health = 50 + wave * 5  # Increase boss health with each boss wave
+        self.speed = 2
+        self.shoot_timer = 0
+        self.move_timer = 0
+        self.delta_x = 1
+        self.delta_y = 1
+        self.max_health = self.health  # Store max health for the health bar
+
+    def move(self):
+        self.move_timer += 1
+
+        # Horizontal movement
+        if self.x <= 0 or self.x >= SCREEN_WIDTH - self.width:
+            self.delta_x *= -1
+        self.x += self.delta_x * self.speed
+
+        # Vertical movement
+        if self.move_timer % 100 == 0:  # Change vertical direction periodically
+            self.delta_y *= -1
+        self.y += self.delta_y * self.speed
+
+    def shoot(self):
+        self.shoot_timer += 1
+        if self.shoot_timer >= 50:  # Shoots every 50 frames
+            self.shoot_timer = 0
+            # Center the bullet relative to the boss's position
+            return [self.x + self.width // 2 - 5, self.y + self.height]
+        return None
+
+
+    def draw(self):
+        pygame.draw.rect(screen, RED, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(screen, WHITE, (self.x, self.y - 10, self.width, 5))  # Health bar background
+        pygame.draw.rect(screen, GREEN, (self.x, self.y - 10, self.width * (self.health / self.max_health), 5))
+
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            return True
+        return False
+
 def draw_bullet(x, y, size):
     pygame.draw.rect(screen, WHITE, (x, y, size[0], size[1]))
 
@@ -168,11 +236,15 @@ def main():
 
     enemies = []
     enemy_bullets = []
+    boss = None
+    boss_active = False
 
     wave = 1
     wave_in_progress = False
 
     running = True
+    show_upgrades = False  # Whether to display the upgrade menu
+
     while running:
         screen.fill(BLACK)
         for event in pygame.event.get():
@@ -181,8 +253,28 @@ def main():
                 sys.exit()
 
         keys = pygame.key.get_pressed()
+
+        # Toggle upgrade menu with the "U" key
+        if keys[pygame.K_u]:
+            show_upgrades = True
+        elif keys[pygame.K_ESCAPE]:
+            show_upgrades = False
+
+        if show_upgrades:
+            show_upgrade_menu(player, coins)
+            # Handle upgrades
+            if keys[pygame.K_1] and coins >= 50:
+                player.upgrade_health()
+                coins -= 50
+            if keys[pygame.K_2] and coins >= 30:
+                player.upgrade_damage()
+                coins -= 30
+            pygame.display.flip()
+            continue  # Skip the rest of the game loop while in upgrade menu
+
         player.move(keys)
 
+        # Bullet logic
         bullet_timer += 1
         if bullet_timer >= 20:
             bullets.append([player.x + PLAYER_WIDTH // 2, player.y])
@@ -192,51 +284,70 @@ def main():
         for bullet in bullets:
             draw_bullet(bullet[0], bullet[1], (BULLET_WIDTH, BULLET_HEIGHT))
 
-        if not wave_in_progress:
-            enemies = spawn_wave(wave)
-            wave_in_progress = True
+        if not wave_in_progress and not boss_active:
+            if wave % 5 == 0:  # Boss level every 5 waves
+                boss = Boss(SCREEN_WIDTH // 2 - 50, 50, wave)
+                boss_active = True
+            else:
+                enemies = spawn_wave(wave)
+                wave_in_progress = True
 
-        for enemy in enemies:
-            enemy.move()
-            enemy.draw()
+        if boss_active:
+            boss.move()
+            boss.draw()
 
-            new_bullet = enemy.shoot()
+            new_bullet = boss.shoot()
             if new_bullet:
-                enemy_bullets.append([new_bullet[0], new_bullet[1], enemy.bullet_size])
+                enemy_bullets.append([new_bullet[0], new_bullet[1], (10, 30)])  # Boss bullets are larger
 
-        enemy_bullets = [[x, y + 5, size] for x, y, size in enemy_bullets if y < SCREEN_HEIGHT]
-        for enemy_bullet in enemy_bullets:
-            draw_bullet(enemy_bullet[0], enemy_bullet[1], enemy_bullet[2])
-            if player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT:
-                enemy_bullets.remove(enemy_bullet)
-                player.take_damage()
-
-        for bullet in bullets[:]:
-            for enemy in enemies[:]:
-                if enemy.x < bullet[0] < enemy.x + enemy.width and enemy.y < bullet[1] < enemy.y + enemy.height:
+            for bullet in bullets[:]:
+                if boss.x < bullet[0] < boss.x + boss.width and boss.y < bullet[1] < boss.y + boss.height:
                     bullets.remove(bullet)
-                    if enemy.take_damage(1):
-                        enemies.remove(enemy)
+                    if boss.take_damage(player.damage):  # Use player damage
+                        boss_active = False
+                        score += 1000  # Reward for defeating the boss
+                        coins += 100
+                        wave += 1
+                        wave_in_progress = False
 
-                    if enemy.type == "normal":
-                        score += 100
-                    elif enemy.type == "rapid":
-                        score += 150
-                    elif enemy.type == "heavy":
-                        score += 200
+        if not boss_active:
+            for enemy in enemies:
+                enemy.move()
+                enemy.draw()
 
-                    if enemy.type == "normal":
-                        coins += 10
-                    elif enemy.type == "rapid":
-                        coins += 15
-                    elif enemy.type == "heavy":
-                        coins += 20
+                new_bullet = enemy.shoot()
+                if new_bullet:
+                    enemy_bullets.append([new_bullet[0], new_bullet[1], enemy.bullet_size])
 
-                    break
+            enemy_bullets = [[x, y + 5, size] for x, y, size in enemy_bullets if y < SCREEN_HEIGHT]
+            for enemy_bullet in enemy_bullets:
+                draw_bullet(enemy_bullet[0], enemy_bullet[1], enemy_bullet[2])
+                if player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT:
+                    enemy_bullets.remove(enemy_bullet)
+                    player.take_damage()
 
-        if not enemies:  # If all enemies are defeated, start the next wave
-            wave += 1
-            wave_in_progress = False
+            for bullet in bullets[:]:
+                for enemy in enemies[:]:
+                    if enemy.x < bullet[0] < enemy.x + enemy.width and enemy.y < bullet[1] < enemy.y + enemy.height:
+                        bullets.remove(bullet)
+                        if enemy.take_damage(player.damage):  # Use player damage
+                            enemies.remove(enemy)
+
+                            if enemy.type == "normal":
+                                score += 100
+                                coins += 10
+                            elif enemy.type == "rapid":
+                                score += 150
+                                coins += 15
+                            elif enemy.type == "heavy":
+                                score += 200
+                                coins += 20
+
+                            break
+
+            if not enemies:  # If all enemies are defeated, start the next wave
+                wave += 1
+                wave_in_progress = False
 
         player.draw()
         show_score_and_health(score, player.health, coins, wave)
