@@ -69,7 +69,7 @@ class CyberSafe:
             sys.exit()
 
 class Enemy:
-    def __init__(self, x, y, enemy_type="normal"):
+    def __init__(self, x, y, enemy_type="normal", wave=1):
         self.x = x
         self.y = y
         self.type = enemy_type
@@ -80,12 +80,20 @@ class Enemy:
         self.delta_x = random.choice([-1, 1])
         self.delta_y = 1
 
+        # Scale health with wave progression
+        health_multiplier = 1 + (wave - 1) * 0.2  # Increase health by 20% per wave
         if self.type == "heavy":
+            self.health = int(5 * health_multiplier)
             self.bullet_size = (10, 30)
             self.shoot_rate = 70
-        else:
+        elif self.type == "rapid":
+            self.health = int(2 * health_multiplier)
             self.bullet_size = (5, 15)
-            self.shoot_rate = 50 if self.type == "normal" else 20
+            self.shoot_rate = 20
+        else:
+            self.health = int(3 * health_multiplier)
+            self.bullet_size = (5, 15)
+            self.shoot_rate = 50
 
         self.change_direction_timer = random.randint(30, 100)
         self.timer_counter = 0
@@ -127,6 +135,12 @@ class Enemy:
             color = RED
         pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
 
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            return True  # Return True if the enemy is dead
+        return False  # Return False if the enemy is still alive
+
 def draw_bullet(x, y, size):
     pygame.draw.rect(screen, WHITE, (x, y, size[0], size[1]))
 
@@ -144,7 +158,7 @@ def spawn_wave(wave):
     enemies = []
     for _ in range(wave * 1):  # Increase the number of enemies each wave
         enemy_type = random.choice(["normal", "heavy", "rapid"])
-        enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-200, -40), enemy_type))
+        enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-200, -40), enemy_type, wave))
     return enemies
 
 def main():
@@ -201,7 +215,8 @@ def main():
             for enemy in enemies[:]:
                 if enemy.x < bullet[0] < enemy.x + enemy.width and enemy.y < bullet[1] < enemy.y + enemy.height:
                     bullets.remove(bullet)
-                    enemies.remove(enemy)
+                    if enemy.take_damage(1):
+                        enemies.remove(enemy)
 
                     if enemy.type == "normal":
                         score += 100
