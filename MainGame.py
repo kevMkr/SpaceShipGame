@@ -342,7 +342,6 @@ def main():
                             elif enemy.type == "heavy":
                                 score += 200
                                 coins += 20
-
                             break
 
             if not enemies:  # If all enemies are defeated, start the next wave
