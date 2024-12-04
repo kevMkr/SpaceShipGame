@@ -300,6 +300,13 @@ def main():
             if new_bullet:
                 enemy_bullets.append([new_bullet[0], new_bullet[1], (10, 30)])  # Boss bullets are larger
 
+            enemy_bullets = [[x, y + 5, size] for x, y, size in enemy_bullets if y < SCREEN_HEIGHT]
+            for enemy_bullet in enemy_bullets:
+                draw_bullet(enemy_bullet[0], enemy_bullet[1], enemy_bullet[2])
+                if player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT:
+                    enemy_bullets.remove(enemy_bullet)
+                    player.take_damage()
+                
             for bullet in bullets[:]:
                 if boss.x < bullet[0] < boss.x + boss.width and boss.y < bullet[1] < boss.y + boss.height:
                     bullets.remove(bullet)
