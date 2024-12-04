@@ -212,15 +212,33 @@ class Boss:
 def draw_bullet(x, y, size):
     pygame.draw.rect(screen, WHITE, (x, y, size[0], size[1]))
 
-def show_score_and_health(score, health, coins, wave):
+def show_score_and_health(score, health, coins, wave, player):
+    # Top-left corner: Score, Coins, and Wave
     score_text = font.render(f"Score: {score}", True, WHITE)
-    health_text = font.render(f"Health: {health}", True, WHITE)
     coins_text = font.render(f"Coins: {coins}", True, WHITE)
     wave_text = font.render(f"Wave: {wave}", True, WHITE)
+
+    # Top-right corner: Health and Damage
+    health_text = font.render(f"Health: {health}/{player.max_health}", True, WHITE)
+    damage_text = font.render(f"Damage: {player.damage}", True, WHITE)
+
     screen.blit(score_text, (10, 10))
-    screen.blit(health_text, (10, 40))
-    screen.blit(coins_text, (10, 70))
-    screen.blit(wave_text, (10, 100))
+    screen.blit(coins_text, (10, 40))
+    screen.blit(wave_text, (10, 70))
+
+    # Right-align health and damage statistics
+    health_x = SCREEN_WIDTH - health_text.get_width() - 10
+    damage_x = SCREEN_WIDTH - damage_text.get_width() - 10
+    health_bar_width = 200
+    health_bar_height = 20
+
+    # Draw health bar
+    pygame.draw.rect(screen, RED, (health_x - health_bar_width - 10, 10, health_bar_width, health_bar_height))
+    pygame.draw.rect(screen, GREEN, (health_x - health_bar_width - 10, 10, health_bar_width * (player.health / player.max_health), health_bar_height))
+
+    # Render health and damage text
+    screen.blit(health_text, (health_x, 10))
+    screen.blit(damage_text, (damage_x, 40))
 
 def spawn_wave(wave):
     enemies = []
@@ -356,7 +374,7 @@ def main():
                 wave_in_progress = False
 
         player.draw()
-        show_score_and_health(score, player.health, coins, wave)
+        show_score_and_health(score, player.health, coins, wave, player)
 
         pygame.display.flip()
         clock.tick(60)
