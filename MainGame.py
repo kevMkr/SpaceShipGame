@@ -106,7 +106,7 @@ class Enemy:
         if self.type == "heavy":
             self.health = int(5 * health_multiplier)
             self.bullet_size = (10, 30)
-            self.shoot_rate = 70
+            self.shoot_rate = 100
         elif self.type == "rapid":
             self.health = int(2 * health_multiplier)
             self.bullet_size = (5, 15)
@@ -114,7 +114,7 @@ class Enemy:
         else:
             self.health = int(3 * health_multiplier)
             self.bullet_size = (5, 15)
-            self.shoot_rate = 50
+            self.shoot_rate = 70
 
         self.change_direction_timer = random.randint(30, 100)
         self.timer_counter = 0
