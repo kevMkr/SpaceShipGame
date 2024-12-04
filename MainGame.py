@@ -82,12 +82,11 @@ class CyberSafe:
 
 
 def show_upgrade_menu(player, coins):
-    #Displays the upgrade menu and allows upgrades
-    upgrade_text = font.render("Upgrade Menu: Press 1 to Increase Health (50 Coins), 2 to Increase Damage (30 Coins)", True, WHITE)
-    coins_text = font.render(f"Coins: {coins}", True, WHITE)
+    # Display the upgrade options in the bottom-right corner
+    upgrade_text = font.render("UPGRADES: 1-Health (50 Coins), 2-Damage (30 Coins)", True, WHITE)
 
-    screen.blit(upgrade_text, (10, SCREEN_HEIGHT - 80))
-    screen.blit(coins_text, (10, SCREEN_HEIGHT - 50))
+    # Positioning the text
+    screen.blit(upgrade_text, (SCREEN_WIDTH - upgrade_text.get_width() - 10, SCREEN_HEIGHT - 35))
 
 class Enemy:
     def __init__(self, x, y, enemy_type="normal", wave=1):
@@ -273,22 +272,22 @@ def main():
         keys = pygame.key.get_pressed()
 
         # Toggle upgrade menu with the "U" key
-        if keys[pygame.K_u]:
-            show_upgrades = True
-        elif keys[pygame.K_ESCAPE]:
-            show_upgrades = False
+        if keys[pygame.K_u] and not key_u_pressed:
+            key_u_pressed = True
+            show_upgrades = not show_upgrades
+        if not keys[pygame.K_u]:
+            key_u_pressed = False
 
+        # Show upgrade options in the bottom-right corner
         if show_upgrades:
             show_upgrade_menu(player, coins)
-            # Handle upgrades
-            if keys[pygame.K_1] and coins >= 50:
+        
+        if keys[pygame.K_1] and coins >= 50:
                 player.upgrade_health()
                 coins -= 50
-            if keys[pygame.K_2] and coins >= 30:
+        if keys[pygame.K_2] and coins >= 30:
                 player.upgrade_damage()
                 coins -= 30
-            pygame.display.flip()
-            continue  # Skip the rest of the game loop while in upgrade menu
 
         player.move(keys)
 
