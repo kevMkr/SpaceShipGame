@@ -78,7 +78,7 @@ class CyberSafe:
         self.health = self.max_health  # Restore full health when upgraded
 
     def upgrade_damage(self):
-        self.damage += 1
+        self.damage += 2
 
 
 def show_upgrade_menu(player, coins):
