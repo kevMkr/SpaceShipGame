@@ -65,12 +65,40 @@ def game_over_screen(score):
             keys = pygame.key.get_pressed()
             if keys[pygame.K_r]:  
                 main()  
-            elif keys[pygame.K_q]:  # Quit the game
+            elif keys[pygame.K_q]:
                 pygame.quit()
                 sys.exit()
 
+def pause_menu():
+    paused = True
+    while paused:
+        screen.fill(BLACK)
+        pause_text = font.render("PAUSED", True, RED)
+        resume_text = font.render("Press R to Resume", True, WHITE)
+        quit_text = font.render("Press Q to Quit", True, WHITE)
+
+        # Center the text
+        screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, SCREEN_HEIGHT // 3))
+        screen.blit(resume_text, (SCREEN_WIDTH // 2 - resume_text.get_width() // 2, SCREEN_HEIGHT // 2))
+        screen.blit(quit_text, (SCREEN_WIDTH // 2 - quit_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:  # Resume game
+            paused = False
+        elif keys[pygame.K_q]:  # Quit game
+            pygame.quit()
+            sys.exit()
+
+
 class CyberSafe:
-    def __init__(self, x, y, health=1, damage=10):
+    def __init__(self, x, y, health=100, damage=10):
         self.x = x
         self.y = y
         self.health = health
@@ -299,6 +327,10 @@ def main():
                 sys.exit()
 
         keys = pygame.key.get_pressed()
+
+        #Toggle pause menu
+        if keys[pygame.K_ESCAPE]:
+            pause_menu()
 
         # Toggle upgrade menu with the "U" key
         if keys[pygame.K_u] and not key_u_pressed:
