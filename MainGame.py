@@ -43,8 +43,34 @@ font = pygame.font.SysFont("Arial", 24)
 explosion_sound = pygame.mixer.Sound("explosion.wav")
 explosion_sound.set_volume(0.5) #Volume to 50%
 
+def game_over_screen(score):
+        while True:
+            screen.fill(BLACK)
+            game_over_text = font.render("GAME OVER", True, RED)
+            score_text = font.render(f"Your Score: {score}", True, WHITE)
+            restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
+
+            # Center the text
+            screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 3))
+            screen.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, SCREEN_HEIGHT // 2))
+            screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_r]:  
+                main()  
+            elif keys[pygame.K_q]:  # Quit the game
+                pygame.quit()
+                sys.exit()
+
 class CyberSafe:
-    def __init__(self, x, y, health=100, damage=10):
+    def __init__(self, x, y, health=1, damage=10):
         self.x = x
         self.y = y
         self.health = health
@@ -70,9 +96,8 @@ class CyberSafe:
     def take_damage(self):
         self.health -= 1
         if self.health <= 0:
-            print("Game Over!")
-            pygame.quit()
-            sys.exit()
+            pygame.time.delay(500)  
+            game_over_screen(score)
 
     def upgrade_health(self):
         self.max_health += 5
