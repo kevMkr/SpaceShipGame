@@ -261,6 +261,11 @@ def main():
     running = True
     show_upgrades = False  # Whether to display the upgrade menu
 
+    #Flags to avoid multiple key press
+    key_u_pressed = False
+    key_1_pressed = False
+    key_2_pressed = False
+
     while running:
         screen.fill(BLACK)
         for event in pygame.event.get():
@@ -281,12 +286,21 @@ def main():
         if show_upgrades:
             show_upgrade_menu(player, coins)
         
-        if keys[pygame.K_1] and coins >= 50:
+        if keys[pygame.K_1] and not key_1_pressed:
+            key_1_pressed = True
+            if coins >= 50:
                 player.upgrade_health()
                 coins -= 50
-        if keys[pygame.K_2] and coins >= 30:
+        if not keys[pygame.K_1]:
+            key_1_pressed = False
+
+        if keys[pygame.K_2] and not key_2_pressed:
+            key_2_pressed = True
+            if coins >= 30:
                 player.upgrade_damage()
                 coins -= 30
+        if not keys[pygame.K_2]:
+            key_2_pressed = False
 
         player.move(keys)
 
