@@ -39,6 +39,10 @@ score = 0
 coins = 0
 font = pygame.font.SysFont("Arial", 24)
 
+#Sound effect Explosions
+explosion_sound = pygame.mixer.Sound("explosion.wav")
+explosion_sound.set_volume(0.5) #Volume to 50%
+
 class CyberSafe:
     def __init__(self, x, y, health=100, damage=10):
         self.x = x
@@ -248,9 +252,7 @@ def spawn_wave(wave):
 
 def main():
     global bullets, score, coins, bullet_timer
-
     player = CyberSafe(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT - 60)
-
     enemies = []
     enemy_bullets = []
     boss = None
@@ -331,6 +333,7 @@ def main():
                         boss_active = False
                         score += 1000  # Reward for defeating the boss
                         coins += 100
+                        explosion_sound.play
                         wave += 1
                         wave_in_progress = False
 
@@ -356,6 +359,7 @@ def main():
                         bullets.remove(bullet)
                         if enemy.take_damage(player.damage):  # Use player damage
                             enemies.remove(enemy)
+                            explosion_sound.play()
 
                             if enemy.type == "normal":
                                 score += 100
