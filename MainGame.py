@@ -66,9 +66,6 @@ class CyberSafe:
 
     def draw(self):
         pygame.draw.rect(screen, GREEN, (self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT))
-        # Display health bar
-        pygame.draw.rect(screen, RED, (self.x, self.y - 10, PLAYER_WIDTH, 5))
-        pygame.draw.rect(screen, GREEN, (self.x, self.y - 10, PLAYER_WIDTH * (self.health / self.max_health), 5))
 
     def take_damage(self):
         self.health -= 1
