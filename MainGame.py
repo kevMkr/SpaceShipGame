@@ -228,32 +228,47 @@ class Boss:
         self.delta_x = 1
         self.delta_y = 1
         self.max_health = self.health  # Store max health for the health bar
+        self.attack_type = "normal"  # Default attack type
 
     def move(self):
         self.move_timer += 1
-
-        # Horizontal movement
         if self.x <= 0 or self.x >= SCREEN_WIDTH - self.width:
             self.delta_x *= -1
         self.x += self.delta_x * self.speed
 
-        # Vertical movement
-        if self.move_timer % 100 == 0:  # Change vertical direction periodically
+        if self.move_timer % 100 == 0:
             self.delta_y *= -1
         self.y += self.delta_y * self.speed
 
+    def choose_attack(self):
+        # Choose attack based on boss's current health or wave
+        if self.health < self.max_health * 0.5:
+            self.attack_type = "rapid_fire"
+        elif self.health < self.max_health * 0.25:
+            self.attack_type = "bullet_spray"
+        else:
+            self.attack_type = "normal"
+
     def shoot(self):
         self.shoot_timer += 1
-        if self.shoot_timer >= 50:  # Shoots every 50 frames
-            self.shoot_timer = 0
-            # Center the bullet relative to the boss's position
-            return [self.x + self.width // 2 - 5, self.y + self.height]
-        return None
+        self.choose_attack()  # Choose the attack type
 
+        if self.shoot_timer >= 50:
+            self.shoot_timer = 0
+            if self.attack_type == "normal":
+                return [self.x + self.width // 2 - 5, self.y + self.height]
+            elif self.attack_type == "rapid_fire":
+                return [self.x + self.width // 2 - 5, self.y + self.height, "rapid"]
+            elif self.attack_type == "bullet_spray":
+                return [
+                    [self.x + self.width // 2 - 5, self.y + self.height, "left"],
+                    [self.x + self.width // 2 - 5, self.y + self.height, "right"]
+                ]
+        return None
 
     def draw(self):
         pygame.draw.rect(screen, RED, (self.x, self.y, self.width, self.height))
-        pygame.draw.rect(screen, WHITE, (self.x, self.y - 10, self.width, 5))  # Health bar background
+        pygame.draw.rect(screen, WHITE, (self.x, self.y - 10, self.width, 5))
         pygame.draw.rect(screen, GREEN, (self.x, self.y - 10, self.width * (self.health / self.max_health), 5))
 
     def take_damage(self, damage):
@@ -383,25 +398,40 @@ def main():
             boss.move()
             boss.draw()
 
+            bullets_to_add = boss.shoot()
             new_bullet = boss.shoot()
             if new_bullet:
-                enemy_bullets.append([new_bullet[0], new_bullet[1], (10, 30)])  # Boss bullets are larger
+                enemy_bullets.append([new_bullet[0], new_bullet[1], (10, 30)])
+
+            if bullets_to_add:
+                # For normal attacks
+                if isinstance(bullets_to_add[0], list):  # Bullet spray (multiple bullets)
+                    for bullet in bullets_to_add:
+                        direction = bullet[2]
+                        if direction == "left":
+                            enemy_bullets.append([bullet[0] - 10, bullet[1], (10, 20)])  # Left diagonal
+                        elif direction == "right":
+                            enemy_bullets.append([bullet[0] + 10, bullet[1], (10, 20)])  # Right diagonal
+                elif bullets_to_add[2] == "rapid":  # Rapid fire
+                    enemy_bullets.append([bullets_to_add[0], bullets_to_add[1], (5, 10)])
+                else:
+                    enemy_bullets.append([bullets_to_add[0], bullets_to_add[1], (10, 30)])
 
             enemy_bullets = [[x, y + 5, size] for x, y, size in enemy_bullets if y < SCREEN_HEIGHT]
-            for enemy_bullet in enemy_bullets:
+            for enemy_bullet in enemy_bullets[:]:  # Iterate over a copy of the list to avoid modification issues
                 draw_bullet(enemy_bullet[0], enemy_bullet[1], enemy_bullet[2])
                 if player.x < enemy_bullet[0] < player.x + PLAYER_WIDTH and player.y < enemy_bullet[1] < player.y + PLAYER_HEIGHT:
-                    enemy_bullets.remove(enemy_bullet)
+                    enemy_bullets.remove(enemy_bullet)  # Remove the bullet after the collision
                     player.take_damage()
                 
-            for bullet in bullets[:]:
+            for bullet in bullets[:]:  # Iterate over a copy of the list for safe removal
                 if boss.x < bullet[0] < boss.x + boss.width and boss.y < bullet[1] < boss.y + boss.height:
                     bullets.remove(bullet)
                     if boss.take_damage(player.damage):  # Use player damage
                         boss_active = False
                         score += 1000  # Reward for defeating the boss
                         coins += 100
-                        explosion_sound.play
+                        explosion_sound.play()  # Play explosion sound
                         wave += 1
                         wave_in_progress = False
 
