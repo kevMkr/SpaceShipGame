@@ -19,6 +19,8 @@ BLUE = (0, 0, 255)
 # Setup the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("CyberSafe")
+background_image = pygame.image.load("background.jpg")  # Replace with your background image path
+background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))  # Scale to fit screen
 
 # Clock for controlling frame rate
 clock = pygame.time.Clock()
@@ -105,6 +107,8 @@ class CyberSafe:
         self.max_health = health
         self.damage = damage
         self.speed = 5
+        self.image = pygame.image.load("player.png")  # Replace with your player image path
+        self.image = pygame.transform.scale(self.image, (PLAYER_WIDTH, PLAYER_HEIGHT))  # Scale to fit
 
     def move(self, keys):
         if keys[pygame.K_LEFT] and self.x > 0:
@@ -119,7 +123,7 @@ class CyberSafe:
             self.y = 350
 
     def draw(self):
-        pygame.draw.rect(screen, GREEN, (self.x, self.y, PLAYER_WIDTH, PLAYER_HEIGHT))
+        screen.blit(self.image, (self.x, self.y))
 
     def take_damage(self):
         self.health -= 1
@@ -200,14 +204,13 @@ class Enemy:
 
     def draw(self):
         if self.type == "normal":
-            color = RED
-        elif self.type == "rapid":
-            color = BLUE
+            self.image = pygame.image.load("enemy_normal.jpeg")  # Replace with the path to your normal enemy image
         elif self.type == "heavy":
-            color = WHITE
-        else:
-            color = RED
-        pygame.draw.rect(screen, color, (self.x, self.y, self.width, self.height))
+            self.image = pygame.image.load("enemy_heavy.png")  # Replace with heavy enemy image
+        elif self.type == "rapid":
+            self.image = pygame.image.load("enemy_rapid.jpeg")  # Replace with rapid enemy image
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        screen.blit(self.image, (self.x, self.y))
 
     def take_damage(self, damage):
         self.health -= damage
@@ -221,7 +224,7 @@ class Boss:
         self.y = y
         self.width = 100
         self.height = 80
-        self.health = 50 + wave * 5  # Increase boss health with each boss wave
+        self.health = 100 + wave * 10  # Increase boss health with each boss wave
         self.speed = 2
         self.shoot_timer = 0
         self.move_timer = 0
@@ -229,6 +232,8 @@ class Boss:
         self.delta_y = 1
         self.max_health = self.health  # Store max health for the health bar
         self.attack_type = "normal"  # Default attack type
+        self.image = pygame.image.load("boss.png")  # Replace with your boss image path
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
 
     def move(self):
         self.move_timer += 1
@@ -242,9 +247,9 @@ class Boss:
 
     def choose_attack(self):
         # Choose attack based on boss's current health or wave
-        if self.health < self.max_health * 0.5:
+        if self.health < self.max_health * 0.60:
             self.attack_type = "rapid_fire"
-        elif self.health < self.max_health * 0.25:
+        elif self.health < self.max_health * 0.30:
             self.attack_type = "bullet_spray"
         else:
             self.attack_type = "normal"
@@ -267,7 +272,7 @@ class Boss:
         return None
 
     def draw(self):
-        pygame.draw.rect(screen, RED, (self.x, self.y, self.width, self.height))
+        screen.blit(self.image, (self.x, self.y))
         pygame.draw.rect(screen, WHITE, (self.x, self.y - 10, self.width, 5))
         pygame.draw.rect(screen, GREEN, (self.x, self.y - 10, self.width * (self.health / self.max_health), 5))
 
@@ -342,6 +347,7 @@ def main():
                 sys.exit()
 
         keys = pygame.key.get_pressed()
+        screen.blit(background_image, (0, 0))
 
         #Toggle pause menu
         if keys[pygame.K_ESCAPE]:
