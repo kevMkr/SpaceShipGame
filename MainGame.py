@@ -100,7 +100,7 @@ def pause_menu():
 
 
 class CyberSafe:
-    def __init__(self, x, y, health=100, damage=10):
+    def __init__(self, x, y, health=20, damage=1):
         self.x = x
         self.y = y
         self.health = health
@@ -132,11 +132,11 @@ class CyberSafe:
             game_over_screen(score)
 
     def upgrade_health(self):
-        self.max_health += 5
+        self.max_health += 10
         self.health = self.max_health  # Restore full health when upgraded
 
     def upgrade_damage(self):
-        self.damage += 2
+        self.damage += 3
 
 
 def show_upgrade_menu(player, coins):
@@ -247,7 +247,7 @@ class Boss:
 
     def choose_attack(self):
         # Choose attack based on boss's current health or wave
-        if self.health < self.max_health * 0.60:
+        if self.health < self.max_health * 0.70:
             self.attack_type = "rapid_fire"
         elif self.health < self.max_health * 0.30:
             self.attack_type = "bullet_spray"
