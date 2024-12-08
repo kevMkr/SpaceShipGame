@@ -6,7 +6,7 @@ import sqlite3
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("CyberSafe")
+        self.title("Login Page")
         self.geometry("400x300")  # Increased window size
         self.create_widgets()
         self.init_database()  # Initialize the database
@@ -57,7 +57,6 @@ class App(tk.Tk):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            security_question TEXT NOT NULL,
             security_answer TEXT NOT NULL
         )
         """)
@@ -66,8 +65,8 @@ class App(tk.Tk):
         cursor.execute("SELECT COUNT(*) FROM users")
         if cursor.fetchone()[0] == 0:  # Check if table is empty
             cursor.execute(
-                "INSERT INTO users (username, password, security_question, security_answer) VALUES (?, ?, ?, ?)",
-                ("admin", "password", "What is your favorite color?", "blue"))
+                "INSERT INTO users (username, password, security_answer) VALUES (?, ?, ?)",
+                ("admin", "password", "blue"))
             self.conn.commit()
 
     def login(self):
@@ -102,7 +101,7 @@ class RegistrationWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Register")
-        self.geometry("400x300")
+        self.geometry("400x250")
         self.parent = parent
 
         # Username
@@ -115,33 +114,42 @@ class RegistrationWindow(tk.Toplevel):
         self.password_entry = tk.Entry(self, show="*", font=("Arial", 12), width=30)
         self.password_entry.pack(pady=5)
 
-        # Security question
-        tk.Label(self, text="Security Question:", font=("Arial", 12)).pack(pady=5)
-        self.security_question_entry = tk.Entry(self, font=("Arial", 12), width=30)
-        self.security_question_entry.pack(pady=5)
+        # Security question label
+        tk.Label(self, text="Security Question: What’s your favourite colour?", font=("Arial", 12)).pack(pady=5)
 
         # Security answer
-        tk.Label(self, text="Security Answer:", font=("Arial", 12)).pack(pady=5)
+        tk.Label(self, text="Answer:", font=("Arial", 12)).pack(pady=5)
         self.security_answer_entry = tk.Entry(self, font=("Arial", 12), width=30)
         self.security_answer_entry.pack(pady=5)
 
+        # Button frame
+        button_frame = tk.Frame(self)
+        button_frame.pack(pady=20)
+
         # Register button
-        tk.Button(self, text="Register", font=("Arial", 12), command=self.register_user).pack(pady=20)
+        register_button = tk.Button(button_frame, text="Register", font=("Arial", 12), command=self.register_user)
+        register_button.grid(row=0, column=0, padx=10)
+
+        # Cancel button
+        cancel_button = tk.Button(button_frame, text="Cancel", font=("Arial", 12), command=self.destroy)
+        cancel_button.grid(row=0, column=1, padx=10)
 
     def register_user(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
-        security_question = self.security_question_entry.get()
         security_answer = self.security_answer_entry.get()
 
-        if username and password and security_question and security_answer:
+        if username and password and security_answer:
             try:
                 cursor = self.parent.conn.cursor()
-                cursor.execute("INSERT INTO users (username, password, security_question, security_answer) VALUES (?, ?, ?, ?)",
-                               (username, password, security_question, security_answer))
+                cursor.execute("INSERT INTO users (username, password, security_answer) VALUES (?, ?, ?)",
+                               (username, password, security_answer))
                 self.parent.conn.commit()
                 messagebox.showinfo("Registration Successful", "You have registered successfully!")
+
+                # Close registration window and focus back on login page
                 self.destroy()
+                self.parent.focus()  # Brings focus back to the main window
             except sqlite3.IntegrityError:
                 messagebox.showerror("Error", "Username already exists!")
         else:
@@ -152,7 +160,7 @@ class ForgotPasswordWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Forgot Password")
-        self.geometry("400x250")
+        self.geometry("400x200")
         self.parent = parent
 
         # Username
@@ -168,12 +176,12 @@ class ForgotPasswordWindow(tk.Toplevel):
 
         if username:
             cursor = self.parent.conn.cursor()
-            cursor.execute("SELECT security_question, security_answer, password FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT security_answer, password FROM users WHERE username = ?", (username,))
             user = cursor.fetchone()
 
             if user:
-                security_question, security_answer, password = user
-                answer = simpledialog.askstring("Security Question", security_question)
+                security_answer, password = user
+                answer = simpledialog.askstring("Security Question", "What’s your favourite colour?")
 
                 if answer and answer.lower() == security_answer.lower():
                     messagebox.showinfo("Password Recovered", f"Your password is: {password}")
