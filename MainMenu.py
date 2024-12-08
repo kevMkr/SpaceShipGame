@@ -7,7 +7,7 @@ class MainMenu(tk.Tk):
         self.title("Main Menu")
         self.geometry("900x500")  # Increase window width to accommodate leaderboard
         self.setup_widgets()
-
+  
     def setup_widgets(self):
         # Create a frame for the left side of the menu (Game and Settings)
         left_frame = tk.Frame(self, width=500)
