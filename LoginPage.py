@@ -47,19 +47,24 @@ class App(tk.Tk):
         exit_button.grid(row=2, column=0, columnspan=2, pady=10)
 
     def init_database(self):
-        """Initializes the SQLite3 database and creates the users table if it doesn't exist."""
+        """Initializes the SQLite3 database and creates or updates the users table."""
         self.conn = sqlite3.connect("users.db")  # Database file
         cursor = self.conn.cursor()
 
-        # Create table
+        # Create table if it doesn't exist
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            security_answer TEXT NOT NULL
+            password TEXT NOT NULL
         )
         """)
+
+        # Add the security_answer column if it doesn't exist
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN security_answer TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
         # Insert a default admin user if the table is empty
         cursor.execute("SELECT COUNT(*) FROM users")
@@ -101,7 +106,7 @@ class RegistrationWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Register")
-        self.geometry("400x250")
+        self.geometry("400x350")
         self.parent = parent
 
         # Username
