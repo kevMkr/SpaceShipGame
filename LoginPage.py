@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import pyodbc
-import os
-
+import MainMenu as mm
 # Establish database connection with error handling
 try:
     conn = pyodbc.connect(
@@ -62,7 +61,7 @@ class App(tk.Tk):
                     f.write(username)
                 messagebox.showinfo("Success", "Login successful!")
                 self.destroy()
-                # Call MainMenu function here
+                mm.mainmenu()
             else:
                 messagebox.showinfo("Error", "Incorrect password.")
         except Exception as e:
