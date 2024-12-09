@@ -1,17 +1,34 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
-import sqlite3
+from tkinter import messagebox, ttk
+import pyodbc
+import MainMenu as mm
 
+conn = pyodbc.connect(r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ= ./CyberSafeDatabase.accdb;')
+cursor = conn.cursor()
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Login Page")
-        self.geometry("400x300")  # Increased window size
-        self.create_widgets()
-        self.init_database()  # Initialize the database
+        self.title("CyberSafe")
+        self.geometry("400x300") 
+        self.resizable(0,0) # Increased window size
+        self.create_widgets() 
 
     def create_widgets(self):
+        def mainmenuwindow():
+            cursor.execute('select Password from Logins where Username = ?', self.username_entry.get)
+            passwordtemp=cursor.fetchone()
+            if passwordtemp == None:
+                messagebox.showinfo("Message","Username doesn't exist")
+            elif self.password_entry.get() == str(passwordtemp).strip("(),'"):
+                f = open("Session.txt","w")
+                f.write(self.username_entry.get())
+                f.close()
+                self.destroy()
+                mm.mainmenu()
+            else:
+                messagebox.showinfo("Message","Wrong password")
+
         # Add a title label
         tk.Label(self, text="Login", font=("Arial", 16, "bold")).pack(pady=10)
 
@@ -46,157 +63,111 @@ class App(tk.Tk):
         exit_button = tk.Button(button_frame, text="Exit", font=("Arial", 12), command=self.exit_app)
         exit_button.grid(row=2, column=0, columnspan=2, pady=10)
 
-    def init_database(self):
-        """Initializes the SQLite3 database and creates or updates the users table."""
-        self.conn = sqlite3.connect("users.db")  # Database file
-        cursor = self.conn.cursor()
-
-        # Create table if it doesn't exist
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        )
-        """)
-
-        # Add the security_answer column if it doesn't exist
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN security_answer TEXT")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
-
-        # Insert a default admin user if the table is empty
-        cursor.execute("SELECT COUNT(*) FROM users")
-        if cursor.fetchone()[0] == 0:  # Check if table is empty
-            cursor.execute(
-                "INSERT INTO users (username, password, security_answer) VALUES (?, ?, ?)",
-                ("admin", "password", "blue"))
-            self.conn.commit()
-
-    def login(self):
-        """Handles login logic with SQLite3 database."""
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
-        user = cursor.fetchone()
-
-        if user:
-            messagebox.showinfo("Login Successful", f"Welcome, {username}!")
-        else:
-            messagebox.showerror("Login Failed", "Invalid username or password")
-
-    def open_registration(self):
-        """Opens the registration window."""
-        RegistrationWindow(self)
-
-    def open_forgot_password(self):
-        """Opens the forgot password window."""
-        ForgotPasswordWindow(self)
-
-    def exit_app(self):
-        """Closes the application and database connection."""
-        self.conn.close()  # Close database connection
-        self.destroy()
-
-
-class RegistrationWindow(tk.Toplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.title("Register")
-        self.geometry("400x350")
-        self.parent = parent
-
-        # Username
-        tk.Label(self, text="Username:", font=("Arial", 12)).pack(pady=5)
-        self.username_entry = tk.Entry(self, font=("Arial", 12), width=30)
-        self.username_entry.pack(pady=5)
-
-        # Password
-        tk.Label(self, text="Password:", font=("Arial", 12)).pack(pady=5)
-        self.password_entry = tk.Entry(self, show="*", font=("Arial", 12), width=30)
-        self.password_entry.pack(pady=5)
-
-        # Security question label
-        tk.Label(self, text="Security Question: What’s your favourite colour?", font=("Arial", 12)).pack(pady=5)
-
-        # Security answer
-        tk.Label(self, text="Answer:", font=("Arial", 12)).pack(pady=5)
-        self.security_answer_entry = tk.Entry(self, font=("Arial", 12), width=30)
-        self.security_answer_entry.pack(pady=5)
-
-        # Button frame
-        button_frame = tk.Frame(self)
-        button_frame.pack(pady=20)
-
-        # Register button
-        register_button = tk.Button(button_frame, text="Register", font=("Arial", 12), command=self.register_user)
-        register_button.grid(row=0, column=0, padx=10)
-
-        # Cancel button
-        cancel_button = tk.Button(button_frame, text="Cancel", font=("Arial", 12), command=self.destroy)
-        cancel_button.grid(row=0, column=1, padx=10)
-
-    def register_user(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-        security_answer = self.security_answer_entry.get()
-
-        if username and password and security_answer:
-            try:
-                cursor = self.parent.conn.cursor()
-                cursor.execute("INSERT INTO users (username, password, security_answer) VALUES (?, ?, ?)",
-                               (username, password, security_answer))
-                self.parent.conn.commit()
-                messagebox.showinfo("Registration Successful", "You have registered successfully!")
-
-                # Close registration window and focus back on login page
-                self.destroy()
-                self.parent.focus()  # Brings focus back to the main window
-            except sqlite3.IntegrityError:
-                messagebox.showerror("Error", "Username already exists!")
-        else:
-            messagebox.showerror("Error", "All fields are required!")
-
-
-class ForgotPasswordWindow(tk.Toplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.title("Forgot Password")
-        self.geometry("400x200")
-        self.parent = parent
-
-        # Username
-        tk.Label(self, text="Username:", font=("Arial", 12)).pack(pady=5)
-        self.username_entry = tk.Entry(self, font=("Arial", 12), width=30)
-        self.username_entry.pack(pady=5)
-
-        # Recover button
-        tk.Button(self, text="Recover Password", font=("Arial", 12), command=self.recover_password).pack(pady=20)
-
-    def recover_password(self):
-        username = self.username_entry.get()
-
-        if username:
-            cursor = self.parent.conn.cursor()
-            cursor.execute("SELECT security_answer, password FROM users WHERE username = ?", (username,))
-            user = cursor.fetchone()
-
-            if user:
-                security_answer, password = user
-                answer = simpledialog.askstring("Security Question", "What’s your favourite colour?")
-
-                if answer and answer.lower() == security_answer.lower():
-                    messagebox.showinfo("Password Recovered", f"Your password is: {password}")
-                else:
-                    messagebox.showerror("Error", "Incorrect answer to the security question!")
+    def registerwindow(self):
+        def createlogin():
+            if passwordvar.get() == passwordreentryvar.get():
+                cursor.execute('insert into Logins(Username,Password,Security) values (?,?,?)',
+                                usernamevar.get(),passwordvar.get(), answervar.get())
+                var2= cursor.execute('select max(UserID) from Logins').fetchone()
+                cursor.execute('select Username from Logins where UserID= ?', var2)
+                usernamevar1= cursor.fetchone()
+                cursor.execute('insert into User(UserID,Username) values(?,?)',int(var2[0]), usernamevar1[0])
+                conn.commit()
+                messagebox.showinfo("Message", "Saved!")
+                registerframe.destroy()
             else:
-                messagebox.showerror("Error", "Username not found!")
-        else:
-            messagebox.showerror("Error", "Please enter your username!")
+                messagebox.showinfo("Message","Password is no match")
 
+            registerframe=tk.Frame(self)
+            registerframe.grid(row=0,column=0,columnspan=2,rowspan=5,sticky="NEWS")
+            registerframe.rowconfigure((0,1,2,3,4,5,6),weight=1)
+            registerframe.columnconfigure(0,weight=2)
+            registerframe.columnconfigure(1,weight=3)
+            tk.Label(registerframe,text="Create new account").grid(row=0,column=0,columnspan=2,sticky="NW",padx=5,pady=5)
+            tk.Label(registerframe, text="Username").grid(row=1, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                            pady=5)
+            tk.Label(registerframe, text="Password").grid(row=2, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                            pady=5)
+            tk.Label(registerframe, text="Re-enter password").grid(row=3, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                                    pady=5)
+            tk.Label(registerframe, text="Security").grid(row=4, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                            pady=5)
+            tk.Label(registerframe, text="Answer").grid(row=5, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                        pady=5)
+            tk.Label(registerframe, text="What is your favourite colour?").grid(row=4,column=1,columnspan=2,sticky="NWS",
+                                                                                padx=5, pady=5)
+
+            usernamevar=tk.StringVar()
+            username_entry = ttk.Entry(registerframe,textvariable=usernamevar)
+            username_entry.grid(column=1, row=1, sticky="EW", padx=5, pady=5)
+            passwordvar=tk.StringVar()
+            passwordcreate_entry = ttk.Entry(registerframe,show="*",textvariable=passwordvar)
+            passwordcreate_entry.grid(column=1, row=2, sticky="EW", padx=5, pady=5)
+            passwordreentryvar=tk.StringVar()
+            passwordreentry_entry = ttk.Entry(registerframe,show="*",textvariable=passwordreentryvar)
+            passwordreentry_entry.grid(column=1, row=3, sticky="EW", padx=5, pady=5)
+            answervar=tk.StringVar()
+            answer_entry = ttk.Entry(registerframe,textvariable=answervar)
+            answer_entry.grid(column=1, row=5, sticky="EW", padx=5, pady=5)
+
+            ttk.Button(registerframe,text="Cancel",command=lambda :registerframe.destroy()).grid(column=1,row=6,sticky="NEWS",pady=5,padx=5)
+            ttk.Button(registerframe, text="Create", command=createlogin).grid(
+                column=0, row=6, sticky="NEWS", pady=5, padx=5)
+
+        def forgotwindow(self):
+            def changepass():
+                cursor.execute('select Security from Logins where Username = ?',username_entry.get())
+                answertemp=cursor.fetchone()
+                if answertemp == None:
+                    messagebox.showinfo("message","Username doesn't exist")
+                elif answer_entry.get() == answertemp[0]:
+                    cursor.execute('update Logins set Password = ? where Username = ?', (newpassword_entry.get(),username_entry.get()))
+                    conn.commit()
+                    forgotframe.destroy()
+                    messagebox.showinfo("Message","Password changed!")
+                else:
+                    messagebox.showinfo("Message","Color no match")
+
+            forgotframe= tk.Frame(self)
+            forgotframe.grid(row=0, column=0, rowspan=5, columnspan=2, sticky="NEWS")
+            forgotframe.rowconfigure((0,1,2,3,4,5), weight=1)
+            forgotframe.columnconfigure(0, weight=2)
+            forgotframe.columnconfigure(1, weight=3)
+            tk.Label(forgotframe, text="Forgot Password").grid(row=0, column= 0, columnspan=2,sticky ="NW",padx=5, pady=5)
+            tk.Label(forgotframe, text="Username").grid(row=1, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                        pady=5)
+            tk.Label(forgotframe, text="Security").grid(row=2, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                        pady=5)
+            tk.Label(forgotframe, text="Question").grid(row=2, column=1, columnspan=2, sticky="NWS", padx=5,
+                                                        pady=5)
+            tk.Label(forgotframe, text="Answer").grid(row=3, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                      pady=5)
+            tk.Label(forgotframe, text="New Password").grid(row=4, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                            pady=5)
+            tk.Label(forgotframe, text="Re-Enter Password").grid(row=5, column=0, columnspan=2, sticky="NWS", padx=5,
+                                                                 pady=5)
+            usernamevar=tk.StringVar()
+            username_entry = ttk.Entry(forgotframe)
+            username_entry.grid(column=1, row=1, sticky="EW",padx=5, pady=5)
+            answervar=tk.StringVar()
+            answer_entry = ttk.Entry(forgotframe)
+            answer_entry.grid(column=1, row=3, sticky="EW", padx=5, pady=5)
+            newpassword_entry = ttk.Entry(forgotframe)
+            newpassword_entry.grid(column=1, row=4, sticky="EW", padx=5, pady=5)
+            repassword_entry = ttk.Entry(forgotframe)
+            repassword_entry.grid(column=1, row=5, sticky="EW", padx=5, pady=5)
+
+            cancelbutton = ttk.Button(forgotframe, text="Cancel", command=lambda: forgotframe.destroy()).grid(
+                column=1, row=6, sticky="NEWS", pady=4, padx=4)
+            forgotbutton = ttk.Button(forgotframe, text="Change", command=changepass).grid(
+                column=0, row=6, sticky="NEWS", pady=4, padx=4)
+
+class User():
+    def __init__(self):
+        session=open("Session.txt","r").read()
+        cursor.execute('select UserID from User where Username=?', session)
+        self.UserID = cursor.fetchone()[0]
+        self.Username = session
 
 if __name__ == "__main__":
     app = App()
