@@ -53,7 +53,7 @@ class App(tk.Tk):
             return
 
         try:
-            cursor.execute("SELECT Password FROM Logins WHERE Username = ?", username)
+            cursor.execute("SELECT Password FROM LoginUser WHERE Username = ?", username)
             result = cursor.fetchone()
             if result is None:
                 messagebox.showinfo("Error", "Username does not exist.")
@@ -123,7 +123,7 @@ class RegisterWindow(tk.Toplevel):
             return
 
         try:
-            cursor.execute("INSERT INTO Logins (Username, Password, Security) VALUES (?, ?, ?)",
+            cursor.execute("INSERT INTO LoginUser(Username, Password, Security) VALUES (?, ?, ?)",
                            username, password, security_answer)
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
@@ -176,12 +176,12 @@ class ForgotPasswordWindow(tk.Toplevel):
             return
 
         try:
-            cursor.execute("SELECT Security FROM Logins WHERE Username = ?", username)
-            result = cursor.fetchone()
+            cursor.execute("SELECT Security FROM LoginUser WHERE Username = ?", username)
+            result = cursor.fetchone()  
             if result is None:
                 messagebox.showinfo("Error", "Username does not exist.")
             elif result[0] == security_answer:
-                cursor.execute("UPDATE Logins SET Password = ? WHERE Username = ?", new_password, username)
+                cursor.execute("UPDATE LoginUser SET Password = ? WHERE Username = ?", new_password, username)
                 conn.commit()
                 messagebox.showinfo("Success", "Password reset successful!")
                 self.destroy()
