@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 import pyodbc
 import MainMenu as mm
+
 # Establish database connection with error handling
 try:
     conn = pyodbc.connect(

@@ -1,6 +1,8 @@
 import pygame
 import random
 import sys
+import pyodbc
+import MainMenu as MM
 
 # Initialize Pygame
 pygame.init()
@@ -70,6 +72,7 @@ def game_over_screen(score):
             elif keys[pygame.K_q]:
                 pygame.quit()
                 sys.exit()
+                MM.MainMenu()
 
 def pause_menu():
     paused = True
@@ -90,6 +93,7 @@ def pause_menu():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+                MM.MainMenu()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_r]:  # Resume game
@@ -97,6 +101,7 @@ def pause_menu():
         elif keys[pygame.K_q]:  # Quit game
             pygame.quit()
             sys.exit()
+            MM.MainMenu()
 
 
 class CyberSafe:

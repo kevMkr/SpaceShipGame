@@ -1,5 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import pyodbc
+import LoginPage as LP
+import MainGame as MG
+
+conn = pyodbc.connect(
+        r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
+    )
 
 class MainMenu(tk.Tk):
     def __init__(self):
