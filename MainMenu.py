@@ -2,11 +2,11 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import pyodbc
 import LoginPage as LP
-import MainGame as MG
+import MainGame as mg
 
 conn = pyodbc.connect(
-        r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
-    )
+    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
+)
 cursor = conn.cursor()
 
 class MainMenu(tk.Tk):
@@ -17,44 +17,44 @@ class MainMenu(tk.Tk):
         self.setup_widgets()
   
     def setup_widgets(self):
+        # Main container frame
+        self.main_frame = tk.Frame(self)
+        self.main_frame.pack(fill="both", expand=True)
+
         # Create a frame for the left side of the menu (Game and Settings)
-        left_frame = tk.Frame(self, width=500)
-        left_frame.pack(side="left", fill="both", expand=True, padx=20)
+        self.left_frame = tk.Frame(self.main_frame, width=500)
+        self.left_frame.pack(side="left", fill="both", expand=True, padx=20)
+
+        # Center buttons in the frame
+        self.left_frame.pack_propagate(False)
+        button_frame = tk.Frame(self.left_frame)
+        button_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         # Header Label
-        header_label = tk.Label(left_frame, text="Main Menu", font=("Arial", 24, "bold"))
+        header_label = tk.Label(self.left_frame, text="Main Menu", font=("Arial", 24, "bold"))
         header_label.pack(pady=20)
 
         # Play Game button
         play_game_button = tk.Button(
-            left_frame,
+            button_frame,
             text="Play Game",
             font=("Arial", 16),
-            command=self.play_game,  # Placeholder function
+            command=self.play_game,
         )
         play_game_button.pack(pady=20)
 
-        # Profile Settings Button
-        profile_button = tk.Button(
-            left_frame,
-            text="Profile Settings",
-            font=("Arial", 16),
-            command=self.open_profile_settings,
-        )
-        profile_button.pack(pady=10)
-
         # Guide Button
         guide_button = tk.Button(
-            left_frame,
+            button_frame,
             text="Guide",
             font=("Arial", 16),
-            command=self.show_guide,
+            command=self.show_guide_frame,
         )
         guide_button.pack(pady=10)
 
         # Exit Application Button
         exit_button = tk.Button(
-            left_frame,
+            button_frame,
             text="Exit Application",
             font=("Arial", 16),
             command=self.exit_application,
@@ -62,15 +62,15 @@ class MainMenu(tk.Tk):
         exit_button.pack(pady=20)
 
         # Create a frame for the right side (Leaderboard)
-        right_frame = tk.Frame(self, width=300, height=400)
-        right_frame.pack(side="right", fill="both", expand=False, padx=20)
+        self.right_frame = tk.Frame(self.main_frame, width=300, height=400)
+        self.right_frame.pack(side="right", fill="both", expand=False, padx=20)
 
         # Leaderboard title
-        tk.Label(right_frame, text="Leaderboard", font=("Arial", 18, "bold")).pack(pady=20)
+        tk.Label(self.right_frame, text="Leaderboard", font=("Arial", 18, "bold")).pack(pady=20)
 
         # Table for displaying leaderboard entries
         columns = ("Rank", "Player", "Score")
-        leaderboard_tree = ttk.Treeview(right_frame, columns=columns, show="headings")
+        leaderboard_tree = ttk.Treeview(self.right_frame, columns=columns, show="headings")
 
         # Define columns headers
         leaderboard_tree.heading("Rank", text="Rank")
@@ -92,17 +92,36 @@ class MainMenu(tk.Tk):
 
         leaderboard_tree.pack(pady=20, padx=20, fill="both", expand=True)
 
+        # Create a guide frame (hidden initially)
+        self.guide_frame = tk.Frame(self)
+        tk.Label(self.guide_frame, text="Game Guide", font=("Arial", 24, "bold")).pack(pady=20)
+        tk.Label(
+            self.guide_frame,
+            text="This is the guide content for the game.\n\nFollow the instructions to play.",
+            font=("Arial", 14),
+            justify="center",
+        ).pack(pady=10)
+        tk.Button(
+            self.guide_frame,
+            text="Back to Main Menu",
+            font=("Arial", 16),
+            command=self.show_main_menu,
+        ).pack(pady=20)
+
+    def show_main_menu(self):
+        """Switches back to the main menu frame."""
+        self.guide_frame.pack_forget()
+        self.main_frame.pack(fill="both", expand=True)
+
+    def show_guide_frame(self):
+        """Displays the guide frame."""
+        self.main_frame.pack_forget()
+        self.guide_frame.pack(fill="both", expand=True)
+
     def play_game(self):
-        """Placeholder for Play Game functionality."""
-        messagebox.showinfo("Play Game", "This feature is under construction!")
-
-    def open_profile_settings(self):
-        """Placeholder for Profile Settings functionality."""
-        messagebox.showinfo("Profile Settings", "Profile Settings are under construction!")
-
-    def show_guide(self):
-        """Displays the guide information."""
-        messagebox.showinfo("Guide", "This is where the game guide will be displayed.")
+        """Navigate to the Main Game."""
+        self.destroy()  # Close the MainMenu window.
+        mg.MainGame()  # Call the MainGame function or class from the MG module.
 
     def exit_application(self):
         """Exits the application."""
