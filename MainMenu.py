@@ -11,8 +11,8 @@ cursor = conn.cursor()
 class MainMenu(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Main Menu")
-        self.geometry("900x500")  # Increase window width to accommodate leaderboard
+        self.title("CyberSafe")
+        self.geometry("1400x600")  # Increase window width to accommodate leaderboard
         self.setup_widgets()
   
     def setup_widgets(self):
@@ -93,13 +93,31 @@ class MainMenu(tk.Tk):
 
         # Create a guide frame (hidden initially)
         self.guide_frame = tk.Frame(self)
+
+        # Guide header
         tk.Label(self.guide_frame, text="Game Guide", font=("Arial", 24, "bold")).pack(pady=20)
+
+        # Add game instructions
+        game_instructions = (
+            "Welcome to the game!\n\n"
+            "Controls:\n"
+            "- Use the arrow keys for movement:\n"
+            "  • UP arrow to move up.\n"
+            "  • DOWN arrow to move down.\n"
+            "  • LEFT arrow to move left.\n"
+            "  • RIGHT arrow to move right.\n\n"
+            "- Press the 'U' key to activate upgrades.\n\n"
+            "Tip: Collect points to increase your score and become the top player on the leaderboard!"
+        )
         tk.Label(
             self.guide_frame,
-            text="This is the guide content for the game.\n\nFollow the instructions to play.",
+            text=game_instructions,
             font=("Arial", 14),
-            justify="center",
+            justify="left",
+            wraplength=600,  # Wrap text for readability
         ).pack(pady=10)
+
+        # Back button to return to the main menu
         tk.Button(
             self.guide_frame,
             text="Back to Main Menu",
@@ -109,13 +127,13 @@ class MainMenu(tk.Tk):
 
     def show_main_menu(self):
         """Switches back to the main menu frame."""
-        self.guide_frame.pack_forget()
-        self.main_frame.pack(fill="both", expand=True)
+        self.guide_frame.pack_forget()  # Hide the guide frame
+        self.main_frame.pack(fill="both", expand=True)  # Show the main menu frame
 
     def show_guide_frame(self):
         """Displays the guide frame."""
-        self.main_frame.pack_forget()
-        self.guide_frame.pack(fill="both", expand=True)
+        self.main_frame.pack_forget()  # Hide the main menu frame
+        self.guide_frame.pack(fill="both", expand=True)  # Show the guide frame
 
     def play_game(self):
         """Navigate to the Main Game."""
