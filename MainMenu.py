@@ -7,6 +7,7 @@ import MainGame as MG
 conn = pyodbc.connect(
         r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
     )
+cursor = conn.cursor()
 
 class MainMenu(tk.Tk):
     def __init__(self):

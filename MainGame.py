@@ -4,6 +4,11 @@ import sys
 import pyodbc
 import MainMenu as MM
 
+conn = pyodbc.connect(
+        r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
+    )
+cursor = conn.cursor()
+
 # Initialize Pygame
 pygame.init()
 
