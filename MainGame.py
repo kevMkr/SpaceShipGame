@@ -70,6 +70,7 @@ def game_over_screen(score):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                    MM.MainMenu()
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_r]:  
@@ -497,5 +498,4 @@ def main():
         clock.tick(60)
 
 if __name__ == "__main__":
-    app = CyberSafe()
     main()

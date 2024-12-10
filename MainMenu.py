@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pyodbc
-import LoginPage as LP
 import MainGame as mg
 
 conn = pyodbc.connect(
