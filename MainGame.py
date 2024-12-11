@@ -6,8 +6,8 @@ import MainMenu as MM
 import LoginPage as LP
 
 conn = pyodbc.connect(
-        r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
-    )
+    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
+)
 cursor = conn.cursor()
 
 
