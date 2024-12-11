@@ -9,8 +9,7 @@ conn = pyodbc.connect(
     )
 cursor = conn.cursor()
 
-# Initialize Pygame
-pygame.init()
+
 
 # Screen dimensions
 SCREEN_WIDTH = 800
@@ -23,6 +22,9 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
+
+# Initialize Pygame
+pygame.init()
 # Setup the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("CyberSafe")
@@ -331,7 +333,7 @@ def spawn_wave(wave):
         enemies.append(Enemy(random.randint(0, SCREEN_WIDTH - 40), random.randint(-200, -40), enemy_type, wave))
     return enemies
 
-def main():
+def mainGame():
     global bullets, score, coins, bullet_timer
     player = CyberSafe(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, SCREEN_HEIGHT - 60)
     enemies = []
@@ -498,4 +500,4 @@ def main():
         clock.tick(60)
 
 if __name__ == "__main__":
-    main()
+    mainGame()

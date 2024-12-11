@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pyodbc
-import MainGame as mg
+from MainGame import mainGame
 
 conn = pyodbc.connect(
     r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
@@ -138,7 +138,7 @@ class MainMenu(tk.Tk):
     def play_game(self):
         """Navigate to the Main Game."""
         self.destroy()  # Close the MainMenu window.
-        mg.MainGame()  # Call the MainGame function or class from the MG module.
+        mainGame()  # Call the MainGame function or class from the MG module.
 
     def exit_application(self):
         """Exits the application."""
