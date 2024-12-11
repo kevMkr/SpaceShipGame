@@ -3,12 +3,12 @@ import random
 import sys
 import pyodbc
 import MainMenu as MM
+import LoginPage as LP
 
 conn = pyodbc.connect(
         r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
     )
 cursor = conn.cursor()
-
 
 
 # Screen dimensions
@@ -59,12 +59,14 @@ def game_over_screen(score):
             screen.fill(BLACK)
             game_over_text = font.render("GAME OVER", True, RED)
             score_text = font.render(f"Your Score: {score}", True, WHITE)
+            save_text = font.render("Press S to Save", True, WHITE)
             restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
 
             # Center the text
             screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 3))
+            screen.blit(save_text,(SCREEN_WIDTH // 2 - save_text.get_width() // 2, SCREEN_HEIGHT // 2 + 40))
             screen.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, SCREEN_HEIGHT // 2))
-            screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
+            screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 80))
 
             pygame.display.flip()
 
@@ -75,14 +77,20 @@ def game_over_screen(score):
                     MM.MainMenu()
 
             keys = pygame.key.get_pressed()
+            if keys[pygame.K_s]:
+                cursor.execute('insert into Leaderboard(UserID,Username,Score) values(?,?,?)', LP.User().UserID,
+                                    LP.User().Username, score)
+                conn.commit()
+                pygame.quit()
+                MM.mainmenu()
             if keys[pygame.K_r]:  
-                main()  
+                mainGame()  
             elif keys[pygame.K_q]:
                 pygame.quit()
                 sys.exit()
                 MM.MainMenu()
 
-def pause_menu():
+def pause_menu():   
     paused = True
     while paused:
         screen.fill(BLACK)
@@ -113,7 +121,7 @@ def pause_menu():
 
 
 class CyberSafe:
-    def __init__(self, x, y, health=20, damage=1):
+    def __init__(self, x, y, health=10, damage=1):
         self.x = x
         self.y = y
         self.health = health
@@ -145,11 +153,11 @@ class CyberSafe:
             game_over_screen(score)
 
     def upgrade_health(self):
-        self.max_health += 10
+        self.max_health += 5
         self.health = self.max_health  # Restore full health when upgraded
 
     def upgrade_damage(self):
-        self.damage += 3
+        self.damage += 2
 
 
 def show_upgrade_menu(player, coins):
