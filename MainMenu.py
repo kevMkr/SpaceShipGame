@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pyodbc
-from MainGame import mainGame
+import MainGame as MG
 
 # Establish connection to the database
 conn = pyodbc.connect(
@@ -151,7 +151,7 @@ class MainMenu(tk.Tk):
     def play_game(self):
         """Navigate to the Main Game."""
         self.destroy()  # Close the MainMenu window.
-        mainGame()  # Call the MainGame function or class from the MG module.
+        MG.mainGame()  # Call the MainGame function or class from the MG module.
 
     def exit_application(self):
         """Exits the application."""

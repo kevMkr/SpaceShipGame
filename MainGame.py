@@ -366,6 +366,7 @@ def mainGame():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+                MM.MainMenu()
 
         keys = pygame.key.get_pressed()
         screen.blit(background_image, (0, 0))
