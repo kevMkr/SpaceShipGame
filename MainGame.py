@@ -82,7 +82,7 @@ def game_over_screen(score):
                                     LP.User().Username, score)
                 conn.commit()
                 pygame.quit()
-                MM.mainmenu()
+                MM.MainMenu()
             if keys[pygame.K_r]:  
                 mainGame()  
             elif keys[pygame.K_q]:

@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import pyodbc
 from MainGame import mainGame
 
+# Establish connection to the database
 conn = pyodbc.connect(
     r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=./CyberSafeDatabase.accdb;'
 )
@@ -69,27 +70,17 @@ class MainMenu(tk.Tk):
 
         # Table for displaying leaderboard entries
         columns = ("Rank", "Player", "Score")
-        leaderboard_tree = ttk.Treeview(self.right_frame, columns=columns, show="headings")
+        self.leaderboard_tree = ttk.Treeview(self.right_frame, columns=columns, show="headings")
 
         # Define columns headers
-        leaderboard_tree.heading("Rank", text="Rank")
-        leaderboard_tree.heading("Player", text="Player")
-        leaderboard_tree.heading("Score", text="Score")
+        self.leaderboard_tree.heading("Rank", text="Rank")
+        self.leaderboard_tree.heading("Player", text="Player")
+        self.leaderboard_tree.heading("Score", text="Score")
 
-        # Sample data (can be replaced with actual data from a file or database)
-        leaderboard_data = [
-            (1, "Player1", 150),
-            (2, "Player2", 120),
-            (3, "Player3", 100),
-            (4, "Player4", 80),
-            (5, "Player5", 60),
-        ]
+        self.leaderboard_tree.pack(pady=20, padx=20, fill="both", expand=True)
 
-        # Insert data into the treeview
-        for rank, player, score in leaderboard_data:
-            leaderboard_tree.insert("", "end", values=(rank, player, score))
-
-        leaderboard_tree.pack(pady=20, padx=20, fill="both", expand=True)
+        # Load leaderboard data from the database
+        self.load_leaderboard()
 
         # Create a guide frame (hidden initially)
         self.guide_frame = tk.Frame(self)
@@ -124,6 +115,28 @@ class MainMenu(tk.Tk):
             font=("Arial", 16),
             command=self.show_main_menu,
         ).pack(pady=20)
+
+    def load_leaderboard(self):
+        """Fetch and display leaderboard data from the database."""
+        try:
+            cursor.execute("""
+                SELECT TOP 10 Username, Score
+                FROM Leaderboard
+                ORDER BY Score DESC
+            """)
+            results = cursor.fetchall()
+
+            # Clear existing data in the treeview
+            for item in self.leaderboard_tree.get_children():
+                self.leaderboard_tree.delete(item)
+
+            # Insert data into the treeview
+            rank = 1
+            for row in results:
+                self.leaderboard_tree.insert("", "end", values=(rank, row.Username, row.Score))
+                rank += 1
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load leaderboard: {e}")
 
     def show_main_menu(self):
         """Switches back to the main menu frame."""
