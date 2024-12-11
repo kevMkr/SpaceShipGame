@@ -11,7 +11,7 @@ Try now at giving a shot of this game and prove whether you're the best by killi
 - Run the LoginPage.py file first
 
 
-### Prerequisites
+## Prerequisites
 Programming languages, libraries, or tools that need to be installed are:
 - Pygame
 - Pyodbc
