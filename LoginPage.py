@@ -114,6 +114,8 @@ class RegisterWindow(tk.Toplevel):
         repassword = self.repassword_entry.get().strip()
         security_answer = self.security_entry.get().strip()
 
+
+
         if not username or not password or not security_answer:
             messagebox.showinfo("Error", "All fields are required.")
             return
@@ -121,19 +123,23 @@ class RegisterWindow(tk.Toplevel):
         if password != repassword:
             messagebox.showinfo("Error", "Passwords do not match.")
             return
-
-        try:
-            cursor.execute("INSERT INTO LoginUser(Username, Password, Security) VALUES (?, ?, ?)",
-                           username, password, security_answer)
-            var2= cursor.execute("SELECT max(UserID) from LoginUser").fetchone()
-            cursor.execute("SELECT Username from LoginUser where UserID = ?", var2)
-            usernamevar1= cursor.fetchone()
-            cursor.execute("INSERT INTO User(UserID,Username) values(?,?)", int(var2[0]), usernamevar1[0])
-            conn.commit()
-            messagebox.showinfo("Success", "Registration successful!")
-            self.destroy()
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred during registration: {e}")
+        username_list = cursor.execute("SELECT username from LoginUser").fetchall()
+        print(username_list)
+        if username in username_list[0]:
+            messagebox.showinfo("Error", "Username exist")
+        else:
+            try:
+                cursor.execute("INSERT INTO LoginUser(Username, Password, Security) VALUES (?, ?, ?)",
+                            username, password, security_answer)
+                var2= cursor.execute("SELECT max(UserID) from LoginUser").fetchone()
+                cursor.execute("SELECT Username from LoginUser where UserID = ?", var2)
+                usernamevar1= cursor.fetchone()
+                cursor.execute("INSERT INTO User(UserID,Username) values(?,?)", int(var2[0]), usernamevar1[0])
+                conn.commit()
+                messagebox.showinfo("Success", "Registration successful!")
+                self.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred during registration: {e}")
 
 
 class ForgotPasswordWindow(tk.Toplevel):
@@ -205,3 +211,5 @@ class User():
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+
+#TODO Data Validation
