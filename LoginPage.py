@@ -62,7 +62,7 @@ class App(tk.Tk):
                     f.write(username)
                 messagebox.showinfo("Success", "Login successful!")
                 self.destroy()
-                mm.mainmenu()
+                mm.MainMenu()
             else:
                 messagebox.showinfo("Error", "Incorrect password.")
         except Exception as e:
@@ -101,7 +101,7 @@ class RegisterWindow(tk.Toplevel):
         self.repassword_entry = tk.Entry(self, show="*", width=30)
         self.repassword_entry.pack(pady=5)
 
-        tk.Label(self, text="Security Question Answer:").pack(pady=5)
+        tk.Label(self, text="Security Question Answer (Favourite Colour):").pack(pady=5)
         self.security_entry = tk.Entry(self, width=30)
         self.security_entry.pack(pady=5)
 
