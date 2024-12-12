@@ -125,6 +125,10 @@ class RegisterWindow(tk.Toplevel):
         try:
             cursor.execute("INSERT INTO LoginUser(Username, Password, Security) VALUES (?, ?, ?)",
                            username, password, security_answer)
+            var2= cursor.execute("SELECT max(UserID) from LoginUser").fetchone()
+            cursor.execute("SELECT Username from LoginUser where UserID = ?", var2)
+            usernamevar1= cursor.fetchone()
+            cursor.execute("INSERT INTO User(UserID,Username) values(?,?)", int(var2[0]), usernamevar1[0])
             conn.commit()
             messagebox.showinfo("Success", "Registration successful!")
             self.destroy()
@@ -189,6 +193,13 @@ class ForgotPasswordWindow(tk.Toplevel):
                 messagebox.showinfo("Error", "Security answer is incorrect.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred during password reset: {e}")
+
+class User():
+    def __init__(self):
+        session=open("Session.txt","r").read()
+        cursor.execute("SELECT UserID from User where Username = ?", session)
+        self.UserID = cursor.fetchone()[0]
+        self.Username = session
 
 
 if __name__ == "__main__":

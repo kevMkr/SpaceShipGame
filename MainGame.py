@@ -80,7 +80,7 @@ def actual_game():
 
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_s]:
-                    cursor.execute('insert into Leaderboard(UserID,Username,Score) values(?,?,?)', LP.User().UserID,
+                    cursor.execute('INSERT into Leaderboard(UserID,Username,Score) values(?,?,?)', LP.User().UserID,
                                         LP.User().Username, score)
                     conn.commit()
                     pygame.quit()

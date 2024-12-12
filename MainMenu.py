@@ -117,7 +117,6 @@ class MainMenu(tk.Tk):
         ).pack(pady=20)
 
     def load_leaderboard(self):
-        """Fetch and display leaderboard data from the database."""
         try:
             cursor.execute("""
                 SELECT TOP 10 Username, Score
