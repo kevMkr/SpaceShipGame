@@ -151,7 +151,7 @@ class MainMenu(tk.Tk):
     def play_game(self):
         """Navigate to the Main Game."""
         self.destroy()  # Close the MainMenu window.
-        MG.mainGame()  # Call the MainGame function or class from the MG module.
+        MG.actual_game()  # Call the MainGame function or class from the MG module.
 
     def exit_application(self):
         """Exits the application."""
