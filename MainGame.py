@@ -411,7 +411,8 @@ def actual_game():
             if bullet_timer >= 20:
                 bullets.append([player.x + PLAYER_WIDTH // 2, player.y])
                 bullet_timer = 0
-
+                
+            # Update player bullets: move them upward and remove any bullets that move off-screen
             bullets = [[x, y + bullet_speed] for x, y in bullets if y + bullet_speed > 0]
             for bullet in bullets:
                 draw_bullet(bullet[0], bullet[1], (BULLET_WIDTH, BULLET_HEIGHT))

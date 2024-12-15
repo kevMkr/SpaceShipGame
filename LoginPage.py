@@ -202,6 +202,8 @@ class ForgotPasswordWindow(tk.Toplevel):
 
 class User():
     def __init__(self):
+        # Represents a logged-in user.
+        # Reads session data and retrieves the UserID and Username from the database.
         session=open("Session.txt","r").read()
         cursor.execute("SELECT UserID from User where Username = ?", session)
         self.UserID = cursor.fetchone()[0]
@@ -211,5 +213,3 @@ class User():
 if __name__ == "__main__":
     app = App()
     app.mainloop()
-
-#TODO Data Validation

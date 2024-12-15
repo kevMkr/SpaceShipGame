@@ -123,7 +123,7 @@ class MainMenu(tk.Tk):
                 FROM Leaderboard
                 ORDER BY Score DESC
             """)
-            results = cursor.fetchall()
+            results = cursor.fetchall() # Fetch all rows from the query result
 
             # Clear existing data in the treeview
             for item in self.leaderboard_tree.get_children():
@@ -132,6 +132,7 @@ class MainMenu(tk.Tk):
             # Insert data into the treeview
             rank = 1
             for row in results:
+                # Insert a new row into the treeview with rank, username, and score
                 self.leaderboard_tree.insert("", "end", values=(rank, row.Username, row.Score))
                 rank += 1
         except Exception as e:
