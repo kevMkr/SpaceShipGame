@@ -146,7 +146,7 @@ class ForgotPasswordWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Forgot Password")
-        self.geometry("400x300")
+        self.geometry("400x400")
         self.create_widgets()
 
     def create_widgets(self):

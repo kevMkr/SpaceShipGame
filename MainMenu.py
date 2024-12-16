@@ -31,7 +31,7 @@ class MainMenu(tk.Tk):
         button_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         # Header Label
-        header_label = tk.Label(self.left_frame, text="Main Menu", font=("Arial", 24, "bold"))
+        header_label = tk.Label(self.left_frame, text="CyberSafe", font=("Arial", 24, "bold"))
         header_label.pack(pady=20)
 
         # Play Game button
